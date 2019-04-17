@@ -7,7 +7,31 @@
  *
  *  This code is distributed under the BSD license, a copy of which is
  *  included in the root directory of this package.
+ *
+ * Structure of image.h images:
+ *
+ * ┌────────────────────────────┐
+ * │        ImageBuffer         │   Wraps either Image<int> or
+ * ├────────────────────────────┤   Image<double> using boost::variant.
+ * │-empty(): bool              │
+ * │-is_int(): bool             │
+ * │-is_double(): bool          │
+ * │-as_int(): Image<int>       │
+ * │-as_double(): Image<double> │
+ * └────────────┬───────────────┘
+ *              │ 1:1 Contains
+ *       ┌──────◆───────┐           Simple container that holds an
+ *       │   Image<T>   │           array of ImageTile<T> panels
+ *       └──────┬───────┘
+ *              │ 1:N Contains
+ *  ┌───────────◆─────────────┐
+ *  │      ImageTile<T>       │     Represents a single named panel
+ *  ├─────────────────────────┤
+ *  │- name():string          │
+ *  │- data():versa<c_grid,T> │
+ *  └─────────────────────────┘
  */
+
 #ifndef DXTBX_FORMAT_IMAGE_H
 #define DXTBX_FORMAT_IMAGE_H
 
