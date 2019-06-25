@@ -5,8 +5,31 @@ import boost.python
 import dxtbx.format.image  # noqa: F401, import dependency for unpickling
 import dxtbx.format.Registry
 
-ext = boost.python.import_ext("dxtbx_ext")
-from dxtbx_imageset_ext import *
+import dxtbx.format.image  # noqa: F401, import dependency for unpickling
+from dxtbx_imageset_ext import (
+    ExternalLookup,
+    ExternalLookupItemBool,
+    ExternalLookupItemDouble,
+    ImageGrid,
+    ImageSet,
+    ImageSetData,
+    ImageSweep,
+)
+
+__all__ = [
+    "ExternalLookup",
+    "ExternalLookupItemBool",
+    "ExternalLookupItemDouble",
+    "FilenameAnalyser",
+    "ImageGrid",
+    "ImageSet",
+    "ImageSetData",
+    "ImageSetFactory",
+    "ImageSetLazy",
+    "ImageSweep",
+    "MemMasker",
+    "MemReader",
+]
 
 
 class MemReader(object):
@@ -499,6 +522,8 @@ class ImageSetFactory(object):
         check_format=True,
         single_file_indices=None,
         format_kwargs=None,
+        beam=None,
+        detector=None,
     ):
         """Create an image set"""
         from dxtbx.format.Format import Format
@@ -522,6 +547,8 @@ class ImageSetFactory(object):
             as_imageset=True,
             format_kwargs=format_kwargs,
             check_format=check_format,
+            beam=beam,
+            detector=detector,
         )
 
     @staticmethod
