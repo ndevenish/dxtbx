@@ -655,8 +655,8 @@ public:
       return data_cache_.image;
     }
     ImageBuffer image = data_.get_data(indices_[index]);
-    data_cache_.index = index;
-    data_cache_.image = image;
+    // data_cache_.index = index;
+    // data_cache_.image = image;
     return image;
   }
 
