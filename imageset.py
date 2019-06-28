@@ -1,6 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
+from collections import OrderedDict
 from builtins import range
+
 import boost.python
 import dxtbx.format.image  # noqa: F401, import dependency for unpickling
 import dxtbx.format.Registry
@@ -76,6 +78,13 @@ class MemMasker(object):
 
     def __len__(self):
         return len(self._images)
+
+
+def _get_filename_or_template(imageset):
+    if imageset.reader().is_single_file_reader():
+        return imageset.reader().master_path()
+    else:
+        return imageset.get_template()
 
 
 class ImageSetAux(boost.python.injector, ImageSet):
@@ -155,6 +164,34 @@ class ImageSetAux(boost.python.injector, ImageSet):
         Return the list of paths
         """
         return [self.get_path(i) for i in range(len(self))]
+
+    def to_dict(self):
+        """
+        Serialize the imageset to a dictionary
+        """
+        data = OrderedDict([("__id__", type(self).__name__)])
+        if isinstance(self, ImageSweep):
+            data["template"] = _get_filename_or_template(self)
+        elif isinstance(self, ImageSet):
+            data["images"] = self.paths()
+        elif isinstance(self, ImageGrid):
+            data["images"] = self.paths()
+            data["grid_size"] = self.get_grid_size()
+        else:
+            raise TypeError(
+                "expected ImageSet or ImageSweep, got {}".format(type(self))
+            )
+
+        if self.reader().is_single_file_reader():
+            data["single_file_indices"] = list(self.indices())
+        data["mask"] = self.external_lookup.mask.filename
+        data["gain"] = self.external_lookup.gain.filename
+        data["pedestal"] = self.external_lookup.pedestal.filename
+        data["dx"] = self.external_lookup.dx.filename
+        data["dy"] = self.external_lookup.dy.filename
+        data["params"] = self.params()
+
+        return data
 
 
 class ImageSetLazy(ImageSet):

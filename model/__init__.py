@@ -6,6 +6,11 @@ import collections
 import json
 import os
 import sys
+<<<<<<< HEAD
+=======
+from collections import OrderedDict
+import warnings
+>>>>>>> Move ImageSet to_dict to ImageSet
 
 import boost.python
 import cctbx.crystal
@@ -534,6 +539,7 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
 
             result["experiment"].append(obj)
 
+<<<<<<< HEAD
         def get_template(imset):
             if imset.reader().is_single_file_reader():
                 return imset.reader().master_path()
@@ -580,12 +586,12 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
             r["params"] = imset.params()
             result["imageset"].append(r)
 
+=======
+>>>>>>> Move ImageSet to_dict to ImageSet
         # Extract all the ordered model dictionaries - is important these
         # preserve the same order as used in experiment serialization above
         for name, models in index_lookup.items():
-            # Only fill out entries not handled above e.g. imageset
-            if name not in result:
-                result[name] = [x.to_dict() for x in models]
+            result[name] = [x.to_dict() for x in models]
 
         # Return the dictionary
         return result
@@ -594,6 +600,8 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
         """Return the experiment list as a datablock list.
         This assumes that the experiment contains 1 datablock."""
         from dxtbx.datablock import DataBlockFactory
+
+        warnings.warn("Datablock usage is deprecated", DeprecationWarning, stacklevel=2)
 
         # Convert the experiment list to dict
         obj = self.to_dict()
