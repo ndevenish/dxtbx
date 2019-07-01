@@ -6,11 +6,7 @@ import collections
 import json
 import os
 import sys
-<<<<<<< HEAD
-=======
-from collections import OrderedDict
 import warnings
->>>>>>> Move ImageSet to_dict to ImageSet
 
 import boost.python
 import cctbx.crystal
@@ -539,55 +535,6 @@ class ExperimentListAux(boost.python.injector, ExperimentList):
 
             result["experiment"].append(obj)
 
-<<<<<<< HEAD
-        def get_template(imset):
-            if imset.reader().is_single_file_reader():
-                return imset.reader().master_path()
-            else:
-                return imset.get_template()
-
-        # Serialize all the imagesets
-        result["imageset"] = []
-        for imset in index_lookup["imageset"]:
-            if isinstance(imset, ImageSweep):
-                # FIXME_HACK
-                template = get_template(imset)
-                r = collections.OrderedDict(
-                    [("__id__", "ImageSweep"), ("template", template)]
-                )
-                # elif isinstance(imset, MemImageSet):
-                #   r = collections.OrderedDict([
-                #     ('__id__', 'MemImageSet')])
-                if imset.reader().is_single_file_reader():
-                    r["single_file_indices"] = list(imset.indices())
-            elif isinstance(imset, ImageSet):
-                r = collections.OrderedDict(
-                    [("__id__", "ImageSet"), ("images", imset.paths())]
-                )
-                if imset.reader().is_single_file_reader():
-                    r["single_file_indices"] = list(imset.indices())
-            elif isinstance(imset, ImageGrid):
-                r = collections.OrderedDict(
-                    [
-                        ("__id__", "ImageGrid"),
-                        ("images", imset.paths()),
-                        ("grid_size", imset.get_grid_size()),
-                    ]
-                )
-                if imset.reader().is_single_file_reader():
-                    r["single_file_indices"] = list(imset.indices())
-            else:
-                raise TypeError("expected ImageSet or ImageSweep, got %s" % type(imset))
-            r["mask"] = imset.external_lookup.mask.filename
-            r["gain"] = imset.external_lookup.gain.filename
-            r["pedestal"] = imset.external_lookup.pedestal.filename
-            r["dx"] = imset.external_lookup.dx.filename
-            r["dy"] = imset.external_lookup.dy.filename
-            r["params"] = imset.params()
-            result["imageset"].append(r)
-
-=======
->>>>>>> Move ImageSet to_dict to ImageSet
         # Extract all the ordered model dictionaries - is important these
         # preserve the same order as used in experiment serialization above
         for name, models in index_lookup.items():
