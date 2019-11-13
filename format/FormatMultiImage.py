@@ -165,6 +165,7 @@ class FormatMultiImage(Format):
 
         # Check if we have a sequence
 
+        # breakpoint()
         # Make sure only 1 or none is set
         assert [as_imageset, as_sequence].count(True) < 2
         if as_imageset:
@@ -293,6 +294,7 @@ class FormatMultiImage(Format):
                 template=template,
             )
 
+            breakpoint()
             # Create the sequence
             iset = ImageSequence(
                 isetdata,

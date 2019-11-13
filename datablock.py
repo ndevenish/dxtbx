@@ -1138,6 +1138,7 @@ class DataBlockFilenameImporter(object):
     def _create_multi_file_imageset(self, format_class, records, format_kwargs=None):
         """Create a multi file sequence or imageset."""
 
+        breakpoint()
         # Make either an imageset or sequence
         if len(records) == 1 and records[0].template is not None:
 
