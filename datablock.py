@@ -1151,6 +1151,7 @@ class DataBlockFilenameImporter(object):
     def _create_multi_file_imageset(self, format_class, records, format_kwargs=None):
         """ Create a multi file sequence or imageset. """
 
+        breakpoint()
         # Make either an imageset or sequence
         if len(records) == 1 and records[0].template is not None:
 
@@ -1193,6 +1194,7 @@ class DataBlockFilenameImporter(object):
 
     def _create_single_file_imageset(self, format_class, filename, format_kwargs=None):
         """ Create an imageset from a multi image file. """
+        # breakpoint()
         if format_kwargs is None:
             format_kwargs = {}
         return format_class.get_imageset(abspath(filename), format_kwargs=format_kwargs)

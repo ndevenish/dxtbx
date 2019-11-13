@@ -28,6 +28,10 @@
 #include <dxtbx/error.h>
 #include <dxtbx/masking/goniometer_shadow_masking.h>
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
 namespace dxtbx {
 
 using format::Image;
@@ -586,6 +590,7 @@ public:
     } else {
       // Check indices
       if (scitbx::af::max(indices) >= data.size()) {
+        cout << "Max: " << scitbx::af::max(indices) << ", size: " << data.size() << endl;
         throw DXTBX_ERROR("Indices are not consistent with # of images");
       }
     }

@@ -24,6 +24,7 @@ def clean_string(input):
 
 
 class FormatNexusJungfrauHack(FormatNexus):
+    _existing = None
     @staticmethod
     def understand(image_file):
         try:
@@ -33,6 +34,10 @@ class FormatNexusJungfrauHack(FormatNexus):
             return False
 
     def _start(self):
+        if self._existing:
+            return
+            
+        FormatNexusJungfrauHack._existing = self
 
         # Read the file structure
         self._reader = reader = NXmxReader(self._image_file)
