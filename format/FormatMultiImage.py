@@ -303,7 +303,7 @@ class FormatMultiImage(Format):
                 template=template,
             )
 
-            breakpoint()
+            # breakpoint()
             # Create the sequence
             iset = ImageSequence(
                 isetdata,
