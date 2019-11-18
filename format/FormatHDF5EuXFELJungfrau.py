@@ -3,15 +3,12 @@ from __future__ import absolute_import, division, print_function
 import operator
 import os
 import re
-import sys
-from functools import reduce
+from functools import lru_cache, reduce
 from pathlib import Path
 
-import h5py
 import karabo_data
 import numpy as np
 
-from scitbx import matrix
 from scitbx.array_family import flex
 
 from dxtbx.format.Format import Format
@@ -43,6 +40,20 @@ HEIGHT = 512 * 3
 PIXEL_SIZE = 75.0 / 1000
 
 
+def _get_max_pulse_count(run):
+    """Looks into the H5 files in a run and extracts the maximum pulse shape"""
+    pulses = []
+    for _file in run.files:
+        try:
+            det_group = _file._file["INSTRUMENT"]["SPB_IRDA_JNGFR"]["DET"]
+        except KeyError:
+            continue
+        module_names = [x for x in det_group.keys() if x.startswith("MODULE")]
+        for module in module_names:
+            pulses.append(det_group[module]["data"]["adc"].shape[1])
+    return max(pulses)
+
+
 class FormatHDF5EuXFELJungfrau(FormatHDF5):
     @staticmethod
     def understand(image_file):
@@ -62,16 +73,18 @@ class FormatHDF5EuXFELJungfrau(FormatHDF5):
         self._path = Path(os.path.dirname(self.get_image_file()))
         self._run = karabo_data.RunDirectory(str(self._path))
         # datadir = Path(sys.argv[1])
-        self._modules = [
-            RE_MODULE.match(x).group(1)
-            for x in self._run.instrument_sources
-            if RE_MODULE.match(x)
-        ]
-        # self._module_datasets = {}
-        # Open one module to get shape of train/pulses
-        module = self._get_module(self._modules[0], "data.adc")
-        self._trains, self._pulses = module.shape[:2]
+        self._modules = sorted(
+            [
+                RE_MODULE.match(x).group(1)
+                for x in self._run.instrument_sources
+                if RE_MODULE.match(x)
+            ]
+        )
 
+        # Get trains from train ids
+        self._trains = len(self._run.train_ids)
+        self._pulses = _get_max_pulse_count(self._run)
+        print("Trains: {}, pulses: {}".format(self._trains, self._pulses))
         # breakpoint()
         # energies = self._run.get_array("ACC_SYS_DOOCS/CTRL/BEAMCONDITIONS", "energy.value")
 
@@ -131,7 +144,7 @@ class FormatHDF5EuXFELJungfrau(FormatHDF5):
         return self._detector_factory.simple(
             sensor="PAD",
             distance=260,
-            beam_centre=(WIDTH / 2 * PIXEL_SIZE, HEIGHT / 2 * PIXEL_SIZE,),
+            beam_centre=(WIDTH / 2 * PIXEL_SIZE, HEIGHT / 2 * PIXEL_SIZE),
             fast_direction="+x",
             slow_direction="+y",
             pixel_size=(PIXEL_SIZE, PIXEL_SIZE),
@@ -153,13 +166,11 @@ class FormatHDF5EuXFELJungfrau(FormatHDF5):
         energy = self._run.get_array(
             "ACC_SYS_DOOCS/CTRL/BEAMCONDITIONS", "energy.value"
         )
-        return self._beam_factory.simple(12398.4)
+        print("Ohai beam")
+        return self._beam_factory.simple(0.979)  # 12398.4)
 
     def _goniometer(self, index=None):
         return None
-
-    # def _scan(self, index=None):
-    #     return None
 
     def _scan(self, index=None):
         return Scan((1, self._trains * self._pulses), (0, 0))
@@ -168,11 +179,62 @@ class FormatHDF5EuXFELJungfrau(FormatHDF5):
         # return len(self._images)
         return self._trains * self._pulses
 
+    @lru_cache(maxsize=2)
+    def _get_train(self, index):
+        return self._run.select("*/DET/*", "data.*").train_from_index(index)
+
     def get_raw_data(self, index=0):
         # detector_2d_assembled_1 = self._run["detector_2d_assembled_1"]
         # tag = detector_2d_assembled_1[self._images[index]]
         # return flex.double(tag["detector_data"].value.astype(np.float64))
-        pass
+
+        # Construct a large image for this index
+        image_data = np.zeros((HEIGHT, WIDTH))
+        # (HEIGHT, WIDTH))
+        train = index // self._pulses
+        pulse = index % self._pulses
+        print("Reading train: {} pulse: {}".format(train, pulse))
+        train_data = self._get_train(train)[1]
+        print("Assembling")
+        # def _get_module(self, module, name="data.adc"):
+        #     # key = (module, name)
+        #     # if not key in self._module_datasets:
+        #     return self._run.get_virtual_dataset(
+        #         "SPB_IRDA_JNGFR/DET/MODULE_{}:daqOutput".format(module), name
+        #     )
+        arrange = [["8", "1"], ["7", "2"], ["6", "3"]]
+        for y, mods in enumerate(arrange):
+            for x, modulename in enumerate(mods):
+                # subset = image_data[y*512:(y+1)*512,x*1024:(x+1)*1024]
+                # module = self._get_module(modulename, "data.adc")
+                print(modulename)
+                module = train_data[
+                    "SPB_IRDA_JNGFR/DET/MODULE_{}:daqOutput".format(modulename)
+                ]["data.adc"]
+                print("    ", module.shape)
+                target = image_data[y * 512 : (y + 1) * 512, x * 1024 : (x + 1) * 1024]
+                # subset = module[train, pulse]
+                if x == 0:
+                    np.copyto(target, np.flip(module[pulse], 0))
+                else:
+                    np.copyto(target, np.flip(module[pulse], 1))
+                target[0].fill(-2)
+                target[-1].fill(-2)
+                target[:, 0].fill(-2)
+                target[:, -1].fill(-2)
+                target[255:257].fill(-2)
+                target[:, 255:257].fill(-2)
+                target[:, 511:513].fill(-2)
+                target[:, 767:769].fill(-2)
+
+                # module = image_data[y * 512 : (y + 1) * 512, x * 1024 : (x + 1) * 1024]
+        # Do masking
+        image_data[0].fill(-2)
+        # image_data[]
+        image_data[-1].fill(-2)
+        image_data[image_data > 0] *= 0.01
+
+        return flex.double(image_data.astype(np.float64))
 
     def get_detectorbase(self, index=None):
         raise NotImplementedError
