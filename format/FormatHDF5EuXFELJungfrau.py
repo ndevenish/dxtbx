@@ -229,9 +229,10 @@ class FormatHDF5EuXFELJungfrau(FormatHDF5):
 
                 # module = image_data[y * 512 : (y + 1) * 512, x * 1024 : (x + 1) * 1024]
         # Do masking
-        image_data[0].fill(-2)
-        # image_data[]
-        image_data[-1].fill(-2)
+        # image_data[0].fill(-2)
+        # # image_data[]
+        # image_data[-1].fill(-2)
+        # Do some basic scaling
         image_data[image_data > 0] *= 0.01
 
         return flex.double(image_data.astype(np.float64))
