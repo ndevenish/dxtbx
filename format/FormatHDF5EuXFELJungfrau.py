@@ -43,11 +43,15 @@ PIXEL_SIZE = 75.0 / 1000
 def _get_max_pulse_count(run):
     """Looks into the H5 files in a run and extracts the maximum pulse shape"""
     pulses = []
+    # breakpoint()
     for _file in run.files:
+        print(_file)
         try:
             det_group = _file._file["INSTRUMENT"]["SPB_IRDA_JNGFR"]["DET"]
-        except KeyError:
+        except (KeyError, TypeError):
+            print("  Nothing in ", _file)
             continue
+        print("  Reading modules of ", det_group.keys())
         module_names = [x for x in det_group.keys() if x.startswith("MODULE")]
         for module in module_names:
             pulses.append(det_group[module]["data"]["adc"].shape[1])
@@ -81,10 +85,22 @@ class FormatHDF5EuXFELJungfrau(FormatHDF5):
             ]
         )
 
+        # Get the (dynamic) pulse structure from the file
+        self._pulses = self._run.get_array(
+            "SPB_RR_SYS/MDL/BUNCH_PATTERN", "sase1.nPulses.value"
+        )
+        # And a lookup for index from pulse
+        self._pulse_index = np.cumsum(self._pulses)
+        self._num_images = int(self._pulse_index[-1])
+
         # Get trains from train ids
         self._trains = len(self._run.train_ids)
-        self._pulses = _get_max_pulse_count(self._run)
-        print("Trains: {}, pulses: {}".format(self._trains, self._pulses))
+
+        assert self._trains == len(
+            self._pulses
+        ), "Train count doesn't match pulse structure"
+        # self._pulses = _get_max_pulse_count(self._run)
+        print("Trains: {}, pulses: {}".format(self._trains, int(self._pulses.sum())))
         # breakpoint()
         # energies = self._run.get_array("ACC_SYS_DOOCS/CTRL/BEAMCONDITIONS", "energy.value")
 
@@ -173,15 +189,30 @@ class FormatHDF5EuXFELJungfrau(FormatHDF5):
         return None
 
     def _scan(self, index=None):
-        return Scan((1, self._trains * self._pulses), (0, 0))
+        return Scan((1, self.get_num_images()), (0, 0))
 
     def get_num_images(self):
         # return len(self._images)
-        return self._trains * self._pulses
+        # return self._trains * self._pulses
+        return self._num_images
 
     @lru_cache(maxsize=2)
     def _get_train(self, index):
         return self._run.select("*/DET/*", "data.*").train_from_index(index)
+
+    def _get_train_pulse(self, index):
+        """Get the train index and pulse number from a global index"""
+        # Find where this pulse number comes. Zero-based index.
+        train_index = np.searchsorted(self._pulse_index, index, side="right")
+        # work out the index for the start of this train, so we can get the
+        # intra-train pulse number
+        train_base_pulse = 0
+        if train_index > 0:
+            train_base_pulse = int(self._pulse_index[train_index - 1])
+
+        pulse = index - train_base_pulse
+
+        return (train_index, pulse)
 
     def get_raw_data(self, index=0):
         # detector_2d_assembled_1 = self._run["detector_2d_assembled_1"]
@@ -190,12 +221,14 @@ class FormatHDF5EuXFELJungfrau(FormatHDF5):
 
         # Construct a large image for this index
         image_data = np.zeros((HEIGHT, WIDTH))
-        # (HEIGHT, WIDTH))
-        train = index // self._pulses
-        pulse = index % self._pulses
+        train, pulse = self._get_train_pulse(index)
+        # # (HEIGHT, WIDTH))
+        # train_index = np.searchsorted(self._pulse_index, index+1, side="right")
+        # pulse = index - self._pulse_index[train_index]
+
         print("Reading train: {} pulse: {}".format(train, pulse))
         train_data = self._get_train(train)[1]
-        print("Assembling")
+        # print("Assembling")
         # def _get_module(self, module, name="data.adc"):
         #     # key = (module, name)
         #     # if not key in self._module_datasets:
@@ -205,19 +238,55 @@ class FormatHDF5EuXFELJungfrau(FormatHDF5):
         arrange = [["8", "1"], ["7", "2"], ["6", "3"]]
         for y, mods in enumerate(arrange):
             for x, modulename in enumerate(mods):
-                # subset = image_data[y*512:(y+1)*512,x*1024:(x+1)*1024]
-                # module = self._get_module(modulename, "data.adc")
-                print(modulename)
-                module = train_data[
-                    "SPB_IRDA_JNGFR/DET/MODULE_{}:daqOutput".format(modulename)
-                ]["data.adc"]
-                print("    ", module.shape)
+                # Work out where to copy this module to
                 target = image_data[y * 512 : (y + 1) * 512, x * 1024 : (x + 1) * 1024]
-                # subset = module[train, pulse]
-                if x == 0:
-                    np.copyto(target, np.flip(module[pulse], 0))
+
+                module_data_key = "SPB_IRDA_JNGFR/DET/MODULE_{}:daqOutput".format(
+                    modulename
+                )
+                if "data.adc" in train_data[module_data_key]:
+                    module = train_data[module_data_key]["data.adc"]
+                    if x == 0:
+                        np.copyto(target, np.flip(module[pulse], 0))
+                    else:
+                        np.copyto(target, np.flip(module[pulse], 1))
+
+                    if modulename == "6":
+                        target[256:, 256:512].fill(-2)
+                    if modulename == "7":
+                        target[:256, 256 : 256 + 128].fill(-2)
+                        pass
                 else:
-                    np.copyto(target, np.flip(module[pulse], 1))
+                    print(
+                        "Warning: Module {} has no data for train {}".format(
+                            modulename, train
+                        )
+                    )
+                    target.fill(-2)
+                # except:
+                #     with open("Error.log", "wt") as f:
+                #         mname = "SPB_IRDA_JNGFR/DET/MODULE_{}:daqOutput".format(modulename)
+                #         print("ERROR: Accessing data", file=f)
+                #         print("Index: {} Train: {} Pulse: {}".format(index, train, pulse), file=f)
+                #         print("for train for module {}".format(modulename), file=f)
+                #         print("Accessing ", mname, file=f)
+                #         print("On train data", train_data, file=f)
+                #         print("  train_data Keys: ", train_data.keys(), file=f)
+                #         if mname in train_data:
+                #             mod = train_data[mname]
+                #             print("Module: ", mod, file=f)
+                #             print("   Module Keys: ", mod.keys(), file=f)
+                #         else:
+                #             print(mname, "NOT IN TRAINDATA", file=f)
+                #         # printtrain_data[
+                #         #     "SPB_IRDA_JNGFR/DET/MODULE_{}:daqOutput".format(modulename)
+                #         # ]()
+                #         # print(train_data)
+
+                #         raise
+                #                     # print("    ", module.shape)
+                # subset = module[train, pulse]
+
                 target[0].fill(-2)
                 target[-1].fill(-2)
                 target[:, 0].fill(-2)
