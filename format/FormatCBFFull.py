@@ -64,9 +64,7 @@ class FormatCBFFull(FormatCBF):
             if buffer:
                 cbf_read_buffer(self._cbf_handle, buffer, pycbf.MSG_DIGEST)
             else:
-                self._cbf_handle.read_widefile(
-                    self._image_file.encode(), pycbf.MSG_DIGEST
-                )
+                self._cbf_handle.read_widefile(self._image_file, pycbf.MSG_DIGEST)
 
             return self._cbf_handle
 
@@ -135,7 +133,7 @@ class FormatCBFFullStill(FormatStill, FormatCBFFull):
         # This implementation only supports single panel.
         try:
             cbf_handle = pycbf.cbf_handle_struct()
-            cbf_handle.read_widefile(image_file.encode(), pycbf.MSG_DIGEST)
+            cbf_handle.read_widefile(image_file, pycbf.MSG_DIGEST)
         except Exception as e:
             if "CBFlib Error" in str(e):
                 return False
@@ -159,8 +157,8 @@ class FormatCBFFullStill(FormatStill, FormatCBFFull):
         # relies on cbflib_adaptbx, which in turn expects a gonio
         cbf = self._get_cbf_handle()
 
-        cbf.find_category(b"array_structure")
-        cbf.find_column(b"encoding_type")
+        cbf.find_category("array_structure")
+        cbf.find_column("encoding_type")
         cbf.select_row(0)
         types = []
         for i in range(cbf.count_rows()):
@@ -181,18 +179,18 @@ class FormatCBFFullStill(FormatStill, FormatCBFFull):
         cbf.select_column(0)
         cbf.select_row(0)
 
-        cbf.find_column(b"data")
-        assert cbf.get_typeofvalue().find(b"bnry") > -1
+        cbf.find_column("data")
+        assert cbf.get_typeofvalue().find("bnry") > -1
 
         # handle floats vs ints
-        if dtype == b"signed 32-bit integer":
+        if dtype == "signed 32-bit integer":
             array_string = cbf.get_integerarray_as_string()
             self._raw_data = flex.int(np.fromstring(array_string, np.int32))
             parameters = cbf.get_integerarrayparameters_wdims_fs()
             slow, mid, fast = (parameters[11], parameters[10], parameters[9])
             assert slow == 1  # sections not supported
             array_size = mid, fast
-        elif dtype == b"signed 64-bit real IEEE":
+        elif dtype == "signed 64-bit real IEEE":
             array_string = cbf.get_realarray_as_string()
             self._raw_data = flex.double(np.fromstring(array_string, np.float))
             parameters = cbf.get_realarrayparameters_wdims_fs()
