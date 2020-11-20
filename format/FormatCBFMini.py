@@ -297,7 +297,7 @@ class FormatCBFMini(FormatCBF):
         """
         cbf = cbf_wrapper()
         cbf_root = os.path.splitext(os.path.basename(path))[0] + ".cbf"
-        cbf.new_datablock(os.path.splitext(os.path.basename(path))[0].encode())
+        cbf.new_datablock(os.path.splitext(os.path.basename(path))[0])
 
         """Data items in the ARRAY_DATA category are the containers for the array data
         items described in the category ARRAY_STRUCTURE."""
@@ -395,7 +395,7 @@ class FormatCBFMini(FormatCBF):
         focus = data.focus()
         data2 = data.copy_to_byte_str()
         elements = len(data)
-        byteorder = b"little_endian"
+        byteorder = "little_endian"
         dimfast = focus[1]
         dimmid = focus[0]
         dimslow = 1
@@ -418,7 +418,7 @@ class FormatCBFMini(FormatCBF):
         )
 
         cbf.write_widefile(
-            cbf_root.encode(),
+            cbf_root,
             pycbf.CBF,
             pycbf.MIME_HEADERS | pycbf.MSG_DIGEST | pycbf.PAD_4K,
             0,

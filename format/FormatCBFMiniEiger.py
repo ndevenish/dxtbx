@@ -86,7 +86,7 @@ class FormatCBFMiniEiger(FormatCBFMini):
         underload = -1
 
         try:
-            identifier = self._cif_header_dictionary["Detector"].encode()
+            identifier = self._cif_header_dictionary["Detector"]
         except KeyError:
             identifier = "Unknown Eiger"
 

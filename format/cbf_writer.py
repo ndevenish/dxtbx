@@ -141,10 +141,7 @@ class FullCBFWriter(object):
 
         # the data block is the root cbf node
         cbf = cbf_wrapper()
-        if six.PY2:
-            cbf.new_datablock(cbf_root)
-        else:
-            cbf.new_datablock(cbf_root.encode())
+        cbf.new_datablock(cbf_root)
 
         # Each category listed here is preceded by the imageCIF description taken from here:
         # http://www.iucr.org/__data/iucr/cifdic_html/2/cif_img.dic/index.html
@@ -542,8 +539,6 @@ class FullCBFWriter(object):
                 )
             else:
                 elsize = 8
-                if six.PY3:
-                    byteorder = byteorder.encode()
                 cbf.set_realarray_wdims_fs(
                     pycbf.CBF_PACKED,
                     binary_id,
@@ -565,8 +560,6 @@ class FullCBFWriter(object):
             cbf = self.get_cbf_handle(index=index, header_only=True)
             self.add_data_to_cbf(cbf, index=index)
 
-        if six.PY3:
-            filename = filename.encode()
         cbf.write_widefile(
             filename, pycbf.CBF, pycbf.MIME_HEADERS | pycbf.MSG_DIGEST | pycbf.PAD_4K, 0
         )

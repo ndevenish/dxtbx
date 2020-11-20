@@ -21,9 +21,9 @@ class cbf_wrapper(pycbf.cbf_handle_struct):
 
     def add_category(self, name, columns):
         """Create a new category and populate it with column names"""
-        self.new_category(name.encode())
+        self.new_category(name)
         for column in columns:
-            self.new_column(column.encode())
+            self.new_column(column)
 
     def add_row(self, data):
         """Add a row to the current category.  If data contains more entries than
@@ -32,12 +32,9 @@ class cbf_wrapper(pycbf.cbf_handle_struct):
         self.new_row()
         self.rewind_column()
         for item in data:
-            try:
-                self.set_value(item.encode())
-            except AttributeError:
-                self.set_value(item)
+            self.set_value(item)
             if item == ".":
-                self.set_typeofvalue(b"null")
+                self.set_typeofvalue("null")
             try:
                 self.next_column()
             except Exception:
@@ -139,7 +136,7 @@ class FormatCBFMultiTile(FormatCBFFull):
                 trusted_range = (0.0, 0.0)
 
             try:
-                cbf.find_column(b"gain")
+                cbf.find_column("gain")
                 cbf.select_row(i)
                 gain = cbf.get_doublevalue()
             except Exception as e:

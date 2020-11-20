@@ -127,8 +127,8 @@ def find_undefined_value(cbf_handle):
 def find_gain_value(cbf_handle):
     """Given a cbf handle, get the gain value."""
     try:
-        cbf_handle.find_category(b"array_intensities")
-        cbf_handle.find_column(b"gain")
+        cbf_handle.find_category("array_intensities")
+        cbf_handle.find_column("gain")
     except Exception as e:
         if "CBF_NOTFOUND" not in str(e):
             raise

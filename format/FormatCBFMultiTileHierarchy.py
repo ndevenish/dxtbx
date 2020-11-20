@@ -298,7 +298,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
                 trusted_range = (0.0, 0.0)
 
             try:
-                cbf.find_column(b"gain")
+                cbf.find_column("gain")
                 gain = cbf.get_doublevalue()
             except Exception as e:
                 if "CBF_NOTFOUND" not in str(e):
