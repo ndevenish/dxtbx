@@ -21,6 +21,7 @@
 #include <hdf5.h>
 
 #include "cbf_read_buffer.h"
+#include "mar_adaptor.h"
 
 namespace dxtbx { namespace format { namespace boost_python {
 
@@ -156,6 +157,23 @@ namespace dxtbx { namespace format { namespace boost_python {
       .def("as_double", &ImageBuffer::as_double);
 
     export_cbf_read_buffer();
+
+    class_<Mar345Adaptor>("Mar345Adaptor", init<std::string>())
+      .def("read_header", &Mar345Adaptor::read_header)
+      .def("read_data", &Mar345Adaptor::read_data)
+      .def("pixel_size", &Mar345Adaptor::pixel_size)
+      .def("wavelength", &Mar345Adaptor::wavelength)
+      .def("distance", &Mar345Adaptor::distance)
+      .def("gain", &Mar345Adaptor::gain)
+      .def("overload", &Mar345Adaptor::overload)
+      .def("size1", &Mar345Adaptor::size1)
+      .def("size2", &Mar345Adaptor::size2)
+      .def("osc_range", &Mar345Adaptor::osc_range)
+      .def("osc_start", &Mar345Adaptor::osc_start)
+      .def("twotheta", &Mar345Adaptor::twotheta)
+      .def("exposure_time", &Mar345Adaptor::exposure_time)
+      .def("rawdata", &Mar345Adaptor::rawdata)
+      .def("test", &Mar345Adaptor::test);
   }
 
 }}}  // namespace dxtbx::format::boost_python
