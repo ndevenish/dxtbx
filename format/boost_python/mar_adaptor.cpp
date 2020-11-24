@@ -9,14 +9,11 @@
 #include <exception>
 #include <scitbx/array_family/flex_types.h>
 #include <cbflib/img.h>
-#include <cbflib_adaptbx/detectors/basic.h>
 #include "mar_adaptor.h"
 
 // Declare function "missing" from img.h public interface
 extern "C" {
-int img_set_tags(img_handle img, int tags);
-// int img_read_mar345header (img_handle img, FILE *file, int *org_data);
-// int img_read_mar345data (img_handle img, FILE *file, int *org_data);
+  int img_set_tags(img_handle img, int tags);
 }
 
 namespace af = scitbx::af;
