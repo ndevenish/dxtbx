@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import os
 from builtins import range
 
 import boost_adaptbx.boost.python
@@ -193,6 +194,7 @@ class ImageSetLazy(ImageSet):
             if (
                 hasattr(format_class, "_current_instance_")
                 and format_class._current_instance_ is not None
+                and format_class._current_pid_ == os.getpid()
             ):
                 format_instance = format_class._current_instance_
                 getter_function = getattr(format_instance, "get_" + item_name)

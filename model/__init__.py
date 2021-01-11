@@ -5,6 +5,7 @@ import copy
 import json
 import os
 import sys
+import warnings
 from builtins import range
 
 import six.moves.cPickle as pickle
@@ -705,14 +706,17 @@ class _(object):
 
     def nullify_all_single_file_reader_format_instances(self):
         """
+        [Deprecated] Nullify all cached format instances for HDF5 and multiprocessing.
+        Previously:
         Parallel reading of HDF5 from the same handle is not allowed. Python
         multiprocessing is a bit messed up and used fork on linux so need to
         close and reopen file.
-
         """
-        for experiment in self:
-            if experiment.imageset.reader().is_single_file_reader():
-                experiment.imageset.reader().nullify_format_instance()
+        warnings.warn(
+            "nullify_all_single_file_reader_format_instances is deprecated and will be removed in the future",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     def as_json(self, filename=None, compact=False, split=False):
         """Dump experiment list as json"""

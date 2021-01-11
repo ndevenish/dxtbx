@@ -43,6 +43,7 @@ class Reader(object):
     def nullify_format_instance(self):
         self.format_class._current_instance_ = None
         self.format_class._current_filename_ = None
+        self.format_class._current_pid_ = None
 
     def read(self, index):
         format_instance = self.format_class.get_instance(self._filename, **self.kwargs)

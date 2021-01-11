@@ -1,0 +1,3 @@
+Make ``Format.get_instance()`` cache pid-based. This means that it is
+no longer necessary to manually reset the cache when starting a new
+process.

@@ -107,10 +107,7 @@ class multi_image_worker(image_worker):
 
     def load(self):
         """Called by seperate process during multiprocessing"""
-
-        if self.command_line.options.nproc > 1:
-            # Need to re-open the file if HDF5 as HDF5 file handles can't be pickled during multiprocessing
-            self.imageset.reader().nullify_format_instance()
+        pass
 
     def read(self, n):
         """Read image at postion n"""
