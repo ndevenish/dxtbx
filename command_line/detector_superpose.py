@@ -1,8 +1,5 @@
-from __future__ import absolute_import, division, print_function
-
 import math
 import sys
-from builtins import range
 
 from libtbx.phil import parse
 from libtbx.test_utils import approx_equal

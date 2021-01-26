@@ -3,12 +3,10 @@ Experimental format for Gatan Digital Micrograph DM4 files. See
 http://www.er-c.org/cbb/info/dmformat/
 """
 
-from __future__ import absolute_import, division, print_function
 
 import os
 import struct
 import sys
-from builtins import range
 
 from boost_adaptbx.boost.python import streambuf
 from scitbx.array_family import flex
@@ -268,7 +266,7 @@ class FormatGatanDM4(FormatMultiImage, Format):
             if name == "":
                 name = "NONAME"
             if "tags" in tag:  # tag directory
-                print(prefix + "DIR: {}".format(name))
+                print(prefix + f"DIR: {name}")
                 prefix += "  "
                 self._print_tag_hierarchy(tag["tags"], prefix)
                 prefix = prefix[:-2]

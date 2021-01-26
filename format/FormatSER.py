@@ -3,11 +3,9 @@ Experimental format for TIA .ser files used by some FEI microscopes. See
 http://www.er-c.org/cbb/info/TIAformat/
 """
 
-from __future__ import absolute_import, division, print_function
 
 import struct
 import sys
-from builtins import range
 
 from boost_adaptbx.boost.python import streambuf
 from scitbx.array_family import flex
@@ -31,7 +29,7 @@ class FormatSER(FormatMultiImage, Format):
         try:
             with FormatSER.open_file(image_file, "rb") as fh:
                 tag = fh.read(14)
-        except IOError:
+        except OSError:
             return False
 
         # File should be little endian

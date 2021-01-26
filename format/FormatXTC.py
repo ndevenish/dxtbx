@@ -1,8 +1,10 @@
-from __future__ import absolute_import, division, print_function
-
 import functools
 import sys
+import time
 
+import numpy as np
+
+from cctbx import factor_ev_angstrom
 from libtbx.phil import parse
 
 from dxtbx import IncorrectFormatError
@@ -10,10 +12,6 @@ from dxtbx.format.Format import Format, abstract
 from dxtbx.format.FormatMultiImage import Reader
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill
-import time
-
-import numpy as np
-from cctbx import factor_ev_angstrom
 
 try:
     import psana
@@ -132,7 +130,9 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             working_phil, unused = master_phil.fetch(
                 sources=[user_input], track_unused_definitions=True
             )
-            unused_args = ["%s=%s" % (u.path, u.object.words[0].value) for u in unused]
+            unused_args = [
+                "{}={}".format(u.path, u.object.words[0].value) for u in unused
+            ]
             if len(unused_args) > 0 and strict:
                 for unused_arg in unused_args:
                     print(unused_arg)
@@ -206,7 +206,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
                 or len(params.run) == 0
             ):
                 return False
-            img = "exp=%s:run=%s:%s" % (
+            img = "exp={}:run={}:{}".format(
                 params.experiment,
                 ",".join(["%d" % r for r in params.run]),
                 params.mode,
@@ -214,7 +214,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
 
             if params.use_ffb:
                 # as ffb is only at SLAC, ok to hardcode /reg/d here
-                img += ":dir=/reg/d/ffb/%s/%s/xtc" % (
+                img += ":dir=/reg/d/ffb/{}/{}/xtc".format(
                     params.experiment[0:3],
                     params.experiment,
                 )

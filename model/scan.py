@@ -1,8 +1,5 @@
-from __future__ import absolute_import, division, print_function
-
 import os
 import warnings
-from builtins import object, range
 
 import pycbf
 
@@ -43,7 +40,7 @@ scan_phil_scope = libtbx.phil.parse(
 )
 
 
-class ScanFactory(object):
+class ScanFactory:
     """A factory for scan instances, to help with constructing the classes
     in a set of common circumstances."""
 

@@ -5,12 +5,10 @@ Convert images of any extant format to pickle files suitable for processing with
 cxi.index.  Note, oscillation values are not preserved.
 """
 
-from __future__ import absolute_import, division, print_function
 
 import math
 import os
 import sys
-from builtins import range
 
 import numpy as np
 
@@ -168,7 +166,7 @@ def run(args=None):
 
         try:
             img = dxtbx.load(imgpath)
-        except IOError:
+        except OSError:
             img = None
 
         if img is None:

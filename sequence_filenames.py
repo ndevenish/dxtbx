@@ -1,8 +1,5 @@
-from __future__ import absolute_import, division, print_function
-
 import os
 import re
-from builtins import range
 from collections import defaultdict
 from glob import glob
 
@@ -183,7 +180,7 @@ def template_string_to_glob_expr(template):
     """Convert the template to a glob expression."""
     pfx = template.split("#")[0]
     sfx = template.split("#")[-1]
-    return "%s%s%s" % (pfx, "[0-9]" * template.count("#"), sfx)
+    return "{}{}{}".format(pfx, "[0-9]" * template.count("#"), sfx)
 
 
 def template_string_number_index(template):
@@ -206,7 +203,7 @@ def template_image_range(template):
 
     # Check that the template matches some files
     if len(filenames) == 0:
-        raise ValueError("Template {} doesn't match any files.".format(template))
+        raise ValueError(f"Template {template} doesn't match any files.")
 
     # Get the templete format
     index = slice(*template_string_number_index(template))

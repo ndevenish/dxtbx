@@ -5,11 +5,9 @@ an example XDS.INP file. This should illustrate the usage of the dxtbx
 classes.
 """
 
-from __future__ import absolute_import, division, print_function
 
 import math
 import sys
-from builtins import object
 
 from scitbx import matrix
 
@@ -35,7 +33,7 @@ def xds_detector_name(xia2_name):
     raise RuntimeError("detector %s unknown" % xia2_name)
 
 
-class to_xds(object):
+class to_xds:
     def __init__(self, sequence):
         self._template = sequence.get_template()
         self._start_end = min(sequence.indices()), max(sequence.indices())
@@ -112,7 +110,7 @@ class to_xds(object):
         y = centre.dot(S)
 
         print("DETECTOR_DISTANCE= %.3f" % origin.dot(N))
-        print("ORGX= %.1f ORGY= %.1f" % (x / f, y / s))
+        print("ORGX= {:.1f} ORGY= {:.1f}".format(x / f, y / s))
         print(
             "ROTATION_AXIS= %.3f %.3f %.3f"
             % (R * self.get_goniometer().get_rotation_axis()).elems

@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
 from calendar import timegm
 from time import strptime
@@ -26,12 +24,9 @@ class FormatPYmultitile(FormatPY):
             return False
         try:
             with FormatPYmultitile.open_file(image_file, "rb") as fh:
-                if six.PY3:
-                    data = pickle.load(fh, encoding="bytes")
-                    data = image_dict_to_unicode(data)
-                else:
-                    data = pickle.load(fh)
-        except IOError:
+                data = pickle.load(fh, encoding="bytes")
+                data = image_dict_to_unicode(data)
+        except OSError:
             return False
 
         wanted_header_items = ["TILES", "METROLOGY"]

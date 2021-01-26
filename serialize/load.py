@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import json
 import os
 
@@ -11,11 +9,10 @@ from dxtbx.serialize.imageset import imageset_from_dict
 
 def _decode_list(data):
     """Decode a list to str from unicode."""
-    if six.PY3:
-        return data
+    return data
     rv = []
     for item in data:
-        if isinstance(item, six.text_type):
+        if isinstance(item, str):
             item = item.encode("utf-8")
         elif isinstance(item, list):
             item = _decode_list(item)
@@ -27,13 +24,12 @@ def _decode_list(data):
 
 def _decode_dict(data):
     """Decode a dict to str from unicode."""
-    if six.PY3:
-        return data
+    return data
     rv = {}
     for key, value in data.items():
-        if isinstance(key, six.text_type):
+        if isinstance(key, str):
             key = key.encode("utf-8")
-        if isinstance(value, six.text_type):
+        if isinstance(value, str):
             value = value.encode("utf-8")
         elif isinstance(value, list):
             value = _decode_list(value)
@@ -71,7 +67,7 @@ def imageset(filename):
     # If the input is a string then open and read from that file
     filename = os.path.abspath(filename)
     directory = os.path.dirname(filename)
-    with open(filename, "r") as infile:
+    with open(filename) as infile:
         return imageset_from_string(infile.read(), directory=directory)
 
 
@@ -103,7 +99,7 @@ def crystal(infile):
     """
     # If the input is a string then open and read from that file
     if isinstance(infile, str):
-        with open(infile, "r") as infile:
+        with open(infile) as infile:
             return CrystalFactory.from_dict(json.loads(infile.read()))
 
     # Otherwise assume the input is a file and read from it

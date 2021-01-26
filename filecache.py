@@ -36,15 +36,13 @@ To instantly drop the cache you can use
 Any further access attempts will then result in an exception.
 """
 
-from __future__ import absolute_import, division, print_function
 
 import io
 import os
-from builtins import object
 from threading import Lock
 
 
-class lazy_file_cache(object):
+class lazy_file_cache:
     """An object providing shared cached access to files"""
 
     def __init__(self, file_object):
@@ -80,13 +78,15 @@ class lazy_file_cache(object):
         self._reference_counter = 0
         self._reference_counter_lock = Lock()
 
-        self._debug("Created cache object for %s: %s" % (str(file_object), str(self)))
+        self._debug(
+            "Created cache object for {}: {}".format(str(file_object), str(self))
+        )
 
     def _debug(self, string):
         pass
 
     def _debug_enable(self, string):
-        print("%s: %s" % (format(id(self), "#x"), string))
+        print("{}: {}".format(format(id(self), "#x"), string))
 
     def __del__(self):
         """Close file handles and drop cache on garbage collection."""
@@ -181,7 +181,7 @@ class lazy_file_cache(object):
     def _check_not_closed(self):
         if self._closed:
             self._debug("Instance tried to access closed cache")
-            raise IOError(
+            raise OSError(
                 "Accessing lazy file cache %s after closing is not allowed" % str(self)
             )
 
@@ -225,7 +225,7 @@ class lazy_file_cache(object):
             self._check_not_closed()
             if self._closing:
                 self._debug("Instance tried to connect to closing cache")
-                raise IOError("Cannot open new file handle: lazy file cache is closing")
+                raise OSError("Cannot open new file handle: lazy file cache is closing")
             self._reference_counter += 1
         self._debug("Instance connected to lazy cache")
 
@@ -341,7 +341,7 @@ class lazy_file_cache(object):
                 )
 
 
-class pseudo_file(object):
+class pseudo_file:
     """A file-like object that serves as frontend to a dxtbx lazy file cache."""
 
     def __init__(self, lazy_cache_object):
@@ -365,7 +365,7 @@ class pseudo_file(object):
 
     def _check_not_closed(self):
         if self._closed:
-            raise IOError("Accessing lazy file cache after closing is not allowed")
+            raise OSError("Accessing lazy file cache after closing is not allowed")
 
     def close(self):
         self._closed = True

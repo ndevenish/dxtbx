@@ -2,7 +2,6 @@
 
 import argparse
 import resource
-from builtins import range
 
 import dxtbx
 

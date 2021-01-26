@@ -1,10 +1,7 @@
-from __future__ import absolute_import, division, print_function
-
 import copy
 import errno
 import json
 import os
-from builtins import range
 
 import pkg_resources
 import six
@@ -61,7 +58,7 @@ class InvalidExperimentListError(RuntimeError):
     """
 
 
-class ExperimentListDict(object):
+class ExperimentListDict:
     """A helper class for serializing the experiment list to dictionary (needed
     to save the experiment list to JSON format."""
 
@@ -174,10 +171,7 @@ class ExperimentListDict(object):
         filename = resolve_path(imageset_data[param], directory=self._directory)
         if self._check_format and filename:
             with open(filename, "rb") as fh:
-                if six.PY3:
-                    return filename, pickle.load(fh, encoding="bytes")
-                else:
-                    return filename, pickle.load(fh)
+                return filename, pickle.load(fh, encoding="bytes")
 
         return filename or "", None
 
@@ -474,13 +468,13 @@ def _experimentlist_from_file(filename, directory=None):
     """Load a model dictionary from a file."""
     filename = resolve_path(filename, directory=directory)
     try:
-        with open(filename, "r") as infile:
+        with open(filename) as infile:
             return json.load(infile, object_hook=_decode_dict)
-    except IOError:
-        raise IOError("unable to read file, %s" % filename)
+    except OSError:
+        raise OSError("unable to read file, %s" % filename)
 
 
-class ExperimentListFactory(object):
+class ExperimentListFactory:
     """A class to help instantiate experiment lists."""
 
     @staticmethod
@@ -503,7 +497,11 @@ class ExperimentListFactory(object):
                     print("Loaded experiments from %s" % filename)
             except Exception as e:
                 if verbose:
-                    print("Could not load experiments from %s: %s" % (filename, str(e)))
+                    print(
+                        "Could not load experiments from {}: {}".format(
+                            filename, str(e)
+                        )
+                    )
                 unhandled.append(filename)
 
         return experiments
@@ -697,7 +695,7 @@ class ExperimentListFactory(object):
         """Load an experiment list from a json file."""
         filename = os.path.abspath(filename)
         directory = os.path.dirname(filename)
-        with open(filename, "r") as infile:
+        with open(filename) as infile:
             return ExperimentListFactory.from_json(
                 infile.read(), check_format=check_format, directory=directory
             )
@@ -737,7 +735,7 @@ class ExperimentListFactory(object):
         # First try as a JSON file
         try:
             return ExperimentListFactory.from_json_file(filename, check_format)
-        except IOError as e:
+        except OSError as e:
             # In an ideal Python 3 world this would be much more simply FileNotFoundError, PermissionError
             if e.errno in (errno.ENOENT, errno.EACCES):
                 raise
@@ -748,7 +746,7 @@ class ExperimentListFactory(object):
         return ExperimentListFactory.from_pickle_file(filename)
 
 
-class ExperimentListTemplateImporter(object):
+class ExperimentListTemplateImporter:
     """A class to import an experiment list from a template."""
 
     def __init__(self, templates, **kwargs):

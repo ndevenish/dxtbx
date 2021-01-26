@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import logging
 import os
 import sys
@@ -65,8 +63,8 @@ class IncorrectFormatError(RuntimeError):
     """
 
     def __init__(self, format_instance, filename):
-        super(IncorrectFormatError, self).__init__(
-            "Could not open %s as %s" % (filename, str(format_instance))
+        super().__init__(
+            "Could not open {} as {}".format(filename, str(format_instance))
         )
         self.args = (format_instance, filename)
 

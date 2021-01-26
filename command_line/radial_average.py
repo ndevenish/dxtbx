@@ -1,12 +1,10 @@
 # LIBTBX_SET_DISPATCHER_NAME dxtbx.radial_average
 # LIBTBX_PRE_DISPATCHER_INCLUDE_SH export PHENIX_GUI_ENVIRONMENT=1
 
-from __future__ import absolute_import, division, print_function
 
 import math
 import os
 import sys
-from builtins import range
 
 import numpy as np
 
@@ -108,7 +106,7 @@ def run(args=None, imageset=None):
                     user_phil.append(iotbx.phil.parse(arg))
                 except RuntimeError as e:
                     raise Sorry(
-                        "Unrecognized argument '%s' (error: %s)" % (arg, str(e))
+                        "Unrecognized argument '{}' (error: {})".format(arg, str(e))
                     )
             else:
                 try:
@@ -342,12 +340,10 @@ def run(args=None, imageset=None):
                 if params.output_bins and "%.3f" % r != "nan":
                     # logger.write("%9.3f %9.3f\n"%     (val,r))        #.xy  format for Rex.cell.
                     logger.write(
-                        "%9.3f %9.3f %9.3f\n" % (val, r, std_devs[i])
+                        "{:9.3f} {:9.3f} {:9.3f}\n".format(val, r, std_devs[i])
                     )  # .xye format for GSASII
                 # logger.write("%.3f %.3f %.3f\n"%(val,r,ds[i]))  # include calculated d spacings
-            logger.write(
-                "Maximum %s: %f, value: %f\n" % (params.x_axis, max_x, max_result)
-            )
+            logger.write(f"Maximum {params.x_axis}: {max_x:f}, value: {max_result:f}\n")
 
             if params.show_plots:
                 if params.plot_x_max is not None:

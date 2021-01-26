@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
 
 import h5py
@@ -41,7 +39,7 @@ class FormatNexusExternalDataFile(FormatHDF5):
     def understand(image_file):
         try:
             return is_nexus_external_data_file(image_file)
-        except IOError:
+        except OSError:
             return False
 
     @classmethod

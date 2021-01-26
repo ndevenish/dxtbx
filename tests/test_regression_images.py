@@ -1,7 +1,6 @@
 """
 Image reading tests against the dials_regression suite
 """
-from __future__ import absolute_import, division, print_function
 
 import bz2
 import gzip
@@ -106,7 +105,7 @@ def _generate_all_test_images():
 
             # Test the filename patterns
             if any(pattern.search(full_path) for pattern in ignore_files):
-                print("Ignoring {}".format(full_path))
+                print(f"Ignoring {full_path}")
                 continue
 
             # Skip h5 files if h5py is not present
@@ -257,7 +256,7 @@ def test_format_class_API_assumptions(test_image):
                 print("Not matching ", filename, "to", format_class)
                 continue
             understood = format_class.understand(filename)
-            print("%s%s: %s" % ("  " * level, subformat, understood))
+            print("{}{}: {}".format("  " * level, subformat, understood))
             if understood:
                 recursive_format_class, subtree_multiple = recurse(
                     subformat, filename, level + 1

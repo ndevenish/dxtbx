@@ -3,7 +3,6 @@ Base implementation of CBF formats - which is just really a place holder
 which will tell you whether something is a CBF file (or no.)
 """
 
-from __future__ import absolute_import, division, print_function
 
 import sys
 
@@ -60,7 +59,7 @@ class FormatCBF(Format):
         if not self.understand(image_file):
             raise IncorrectFormatError(self, image_file)
 
-        super(FormatCBF, self).__init__(str(image_file), **kwargs)
+        super().__init__(str(image_file), **kwargs)
 
     @staticmethod
     def _parse_cbf_header(cbf_header):

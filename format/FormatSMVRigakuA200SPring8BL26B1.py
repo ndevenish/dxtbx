@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 from iotbx.detectors.dtrek import DTREKImage
 
 from dxtbx.format.FormatSMVRigakuA200 import FormatSMVRigakuA200
@@ -19,15 +17,15 @@ class FormatSMVRigakuA200SPring8BL26B1(FormatSMVRigakuA200):
 
         detector_prefix = header["DETECTOR_NAMES"].split()[0].strip()
 
-        test = "%s%s" % (detector_prefix, "DETECTOR_IDENTIFICATION")
+        test = "{}{}".format(detector_prefix, "DETECTOR_IDENTIFICATION")
         if header.get(test) != "MSC_REIT_A200_SN09250183":
             return False
 
-        test = "%s%s" % (detector_prefix, "DETECTOR_DESCRIPTION")
+        test = "{}{}".format(detector_prefix, "DETECTOR_DESCRIPTION")
         if not header.get(test).startswith("A200"):
             return False
 
-        test = "%s%s" % (detector_prefix, "GONIO_DESCRIPTION")
+        test = "{}{}".format(detector_prefix, "GONIO_DESCRIPTION")
         if not header.get(test).startswith("SPring-8"):
             return False
 

@@ -1,6 +1,5 @@
 """Experimental format for TIA .ser files used by FEI microscope at eBIC."""
 
-from __future__ import absolute_import, division, print_function
 
 import sys
 
@@ -96,7 +95,7 @@ class FormatSEReBIC(FormatSER):
 
     def get_raw_data(self, index):
 
-        raw_data = super(FormatSEReBIC, self).get_raw_data(index)
+        raw_data = super().get_raw_data(index)
 
         return raw_data
 

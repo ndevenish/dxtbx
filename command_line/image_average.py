@@ -5,11 +5,9 @@
 Average images of any dxtbx-supported format. Handles many individual images or single container files.
 """
 
-from __future__ import absolute_import, division, print_function
 
 import copy
 import sys
-from builtins import range
 
 import numpy as np
 
@@ -50,7 +48,7 @@ def splitit(l, n):
     return r
 
 
-class image_worker(object):
+class image_worker:
     """Class to compute running sums while reading image data"""
 
     # Deriving class should implement __init__, load and read

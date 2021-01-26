@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import copy
 import os
 import sys
@@ -27,12 +25,9 @@ class FormatPYunspecified(FormatPY):
         _start() method and again in the detectorbase constructor."""
         try:
             with FormatPYunspecified.open_file(image_file, "rb") as fh:
-                if six.PY3:
-                    data = pickle.load(fh, encoding="bytes")
-                    data = image_dict_to_unicode(data)
-                else:
-                    data = pickle.load(fh)
-        except IOError:
+                data = pickle.load(fh, encoding="bytes")
+                data = image_dict_to_unicode(data)
+        except OSError:
             return False
 
         headers = set(data)
@@ -44,15 +39,10 @@ class FormatPYunspecified(FormatPY):
         pass
 
     def _start(self):
-        if isinstance(self._image_file, six.string_types) and os.path.isfile(
-            self._image_file
-        ):
+        if isinstance(self._image_file, str) and os.path.isfile(self._image_file):
             with FormatPYunspecified.open_file(self._image_file, "rb") as fh:
-                if six.PY3:
-                    data = pickle.load(fh, encoding="bytes")
-                    data = image_dict_to_unicode(data)
-                else:
-                    data = pickle.load(fh)
+                data = pickle.load(fh, encoding="bytes")
+                data = image_dict_to_unicode(data)
         else:
             data = self._image_file
 
@@ -76,9 +66,7 @@ class FormatPYunspecified(FormatPY):
 
     def start_helper(self, version_token):
 
-        is_file = isinstance(self._image_file, six.string_types) and os.path.isfile(
-            self._image_file
-        )
+        is_file = isinstance(self._image_file, str) and os.path.isfile(self._image_file)
 
         if is_file:
             file_name = self._image_file
@@ -210,7 +198,7 @@ class FormatPYunspecifiedInMemory(FormatPYunspecified):
 
     def __init__(self, data, **kwargs):
         """@param data In memory image dictionary, alredy initialized"""
-        super(FormatPYunspecifiedInMemory, self).__init__(data, **kwargs)
+        super().__init__(data, **kwargs)
         self._image_file = copy.deepcopy(data)
 
 
