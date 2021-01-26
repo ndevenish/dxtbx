@@ -142,7 +142,7 @@ def run(args=None, imageset=None):
         logger = sys.stdout
     else:
         logger = open(params.output_file, "w")
-        logger.write("%s " % params.output_file)
+        logger.write("%s ", params.output_file)
 
     if params.show_plots:
         from matplotlib import pyplot as plt
@@ -246,9 +246,9 @@ def run(args=None, imageset=None):
                 logger.flush()
                 if params.verbose:
                     logger.write(
-                        "Average intensity tile %d: %9.3f\n" % (tile, flex.mean(data))
+                        "Average intensity tile %d: %9.3f\n", tile, flex.mean(data)
                     )
-                    logger.write("N bins: %d\n" % params.n_bins)
+                    logger.write("N bins: %d\n", params.n_bins)
                     logger.flush()
 
                 x1, y1, x2, y2 = (
@@ -340,7 +340,7 @@ def run(args=None, imageset=None):
                 if params.output_bins and "%.3f" % r != "nan":
                     # logger.write("%9.3f %9.3f\n"%     (val,r))        #.xy  format for Rex.cell.
                     logger.write(
-                        "{:9.3f} {:9.3f} {:9.3f}\n".format(val, r, std_devs[i])
+                        "%9.3f %9.3f %9.3f\n", val, r, std_devs[i]
                     )  # .xye format for GSASII
                 # logger.write("%.3f %.3f %.3f\n"%(val,r,ds[i]))  # include calculated d spacings
             logger.write(f"Maximum {params.x_axis}: {max_x:f}, value: {max_result:f}\n")
