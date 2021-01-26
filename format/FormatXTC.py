@@ -130,9 +130,7 @@ class FormatXTC(FormatMultiImageLazy, FormatStill, Format):
             working_phil, unused = master_phil.fetch(
                 sources=[user_input], track_unused_definitions=True
             )
-            unused_args = [
-                "{}={}".format(u.path, u.object.words[0].value) for u in unused
-            ]
+            unused_args = [f"{u.path}={u.object.words[0].value}" for u in unused]
             if len(unused_args) > 0 and strict:
                 for unused_arg in unused_args:
                     print(unused_arg)

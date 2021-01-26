@@ -32,7 +32,7 @@ class FormatSMVRigakuSaturnSN07400090(FormatSMVRigakuSaturn):
 
         detector_prefix = header["DETECTOR_NAMES"].split()[0].strip()
         try:
-            serial_number = header["%sSERIAL_NUMBER" % detector_prefix]
+            serial_number = header[f"{detector_prefix}SERIAL_NUMBER"]
         except KeyError:
             return False
 
@@ -65,9 +65,9 @@ class FormatSMVRigakuSaturnSN07400090(FormatSMVRigakuSaturn):
 
         gonio_axes = self.get_gonio_axes(detector_name)
         gonio_values = self.get_gonio_values(detector_name)
-        gonio_units = self._header_dictionary["%sGONIO_UNITS" % detector_name].split()
+        gonio_units = self._header_dictionary[f"{detector_name}GONIO_UNITS"].split()
         gonio_num_axes = int(
-            self._header_dictionary["%sGONIO_NUM_VALUES" % detector_name]
+            self._header_dictionary[f"{detector_name}GONIO_NUM_VALUES"]
         )
 
         rotations = []
@@ -86,7 +86,7 @@ class FormatSMVRigakuSaturnSN07400090(FormatSMVRigakuSaturn):
                 )
                 translations.append(gonio_values[j] * axis)
             else:
-                raise RuntimeError("unknown axis unit %s" % unit)
+                raise RuntimeError(f"unknown axis unit {unit}")
 
         rotations.reverse()
         translations.reverse()

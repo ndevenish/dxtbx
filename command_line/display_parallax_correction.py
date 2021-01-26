@@ -17,8 +17,8 @@ def run(args=None):
     assert len(detector) == 1
     px_mm = detector[0].get_px_mm_strategy()
     assert isinstance(px_mm, ParallaxCorrectedPxMmStrategy)
-    print("Mu: %f mm^-1 " % px_mm.mu())
-    print("t0: %f mm" % px_mm.t0())
+    print(f"Mu: {px_mm.mu():f} mm^-1 ")
+    print(f"t0: {px_mm.t0():f} mm")
 
     image_size = detector[0].get_image_size()[::-1]
     xcorr = flex.double(flex.grid(image_size))

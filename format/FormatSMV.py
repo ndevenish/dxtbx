@@ -104,7 +104,7 @@ class FormatSMV(Format):
         return [
             float(bp)
             for bp in self._header_dictionary[
-                "%sSPATIAL_DISTORTION_INFO" % detector_name
+                f"{detector_name}SPATIAL_DISTORTION_INFO"
             ].split()[:2]
         ]
 
@@ -119,36 +119,34 @@ class FormatSMV(Format):
     def get_detector_axes(self, detector_name):
         return [
             float(v)
-            for v in self._header_dictionary[
-                "%sDETECTOR_VECTORS" % detector_name
-            ].split()
+            for v in self._header_dictionary[f"{detector_name}DETECTOR_VECTORS"].split()
         ]
 
     def get_distortion(self, detector_name):
         return [
             float(sdv)
             for sdv in self._header_dictionary[
-                "%sSPATIAL_DISTORTION_VECTORS" % detector_name
+                f"{detector_name}SPATIAL_DISTORTION_VECTORS"
             ].split()
         ]
 
     def get_gonio_axes(self, detector_name):
         return [
             float(gv)
-            for gv in self._header_dictionary["%sGONIO_VECTORS" % detector_name].split()
+            for gv in self._header_dictionary[f"{detector_name}GONIO_VECTORS"].split()
         ]
 
     def get_gonio_values(self, detector_name):
         return [
             float(gv)
-            for gv in self._header_dictionary["%sGONIO_VALUES" % detector_name].split()
+            for gv in self._header_dictionary[f"{detector_name}GONIO_VALUES"].split()
         ]
 
     def get_image_size(self, detector_name):
         return [
             int(dd)
             for dd in self._header_dictionary[
-                "%sDETECTOR_DIMENSIONS" % detector_name
+                f"{detector_name}DETECTOR_DIMENSIONS"
             ].split()
         ]
 
@@ -156,7 +154,7 @@ class FormatSMV(Format):
         return [
             float(ps)
             for ps in self._header_dictionary[
-                "%sSPATIAL_DISTORTION_INFO" % detector_name
+                f"{detector_name}SPATIAL_DISTORTION_INFO"
             ].split()[2:]
         ]
 

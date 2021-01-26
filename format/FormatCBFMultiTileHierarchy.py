@@ -104,7 +104,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
                 )
             )
         else:
-            raise Sorry("Unrecognized vector type: %s" % axis_type)
+            raise Sorry(f"Unrecognized vector type: {axis_type}")
 
         return cob
 

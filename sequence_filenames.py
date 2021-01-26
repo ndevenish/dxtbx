@@ -180,7 +180,7 @@ def template_string_to_glob_expr(template):
     """Convert the template to a glob expression."""
     pfx = template.split("#")[0]
     sfx = template.split("#")[-1]
-    return "{}{}{}".format(pfx, "[0-9]" * template.count("#"), sfx)
+    return f"{pfx}{'[0-9]' * template.count('#')}{sfx}"
 
 
 def template_string_number_index(template):

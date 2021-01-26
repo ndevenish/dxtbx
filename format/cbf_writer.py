@@ -147,7 +147,7 @@ class FullCBFWriter:
 
         """Data items in the DIFFRN category record details about the
      diffraction data and their measurement."""
-        diffrn_id = "dxtbx_%s" % self.imageset.reader().format_class.__name__
+        diffrn_id = f"dxtbx_{self.imageset.reader().format_class.__name__}"
         cbf.add_category("diffrn", ["id"])
         cbf.add_row([diffrn_id])
 
@@ -258,25 +258,24 @@ class FullCBFWriter:
         axis_names.append("AXIS_GRAVITY")
         cbf.add_row(
             (
-                "%s_Z         translation detector .        0  0  1 . . . %s"
-                % (dname, eqc)
+                f"{dname}_Z         translation detector .        0  0  1 . . . {eqc}"
             ).split()
         )
-        axis_names.append("%s_Z" % dname)
+        axis_names.append(f"{dname}_Z")
         cbf.add_row(
             (
                 "%s_Y         translation detector %s_Z     0  1  0 . . . %s"
                 % (dname, dname, eqc)
             ).split()
         )
-        axis_names.append("%s_Y" % dname)
+        axis_names.append(f"{dname}_Y")
         cbf.add_row(
             (
                 "%s_X         translation detector %s_Y     1  0  0 . . . %s"
                 % (dname, dname, eqc)
             ).split()
         )
-        axis_names.append("%s_X" % dname)
+        axis_names.append(f"{dname}_X")
 
         axis_settings.append(["AXIS_SOURCE", "FRAME1", "0", "0"])
         axis_settings.append(["AXIS_GRAVITY", "FRAME1", "0", "0"])

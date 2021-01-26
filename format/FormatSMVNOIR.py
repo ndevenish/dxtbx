@@ -97,7 +97,7 @@ class FormatSMVNOIR(FormatSMVRigaku):
         return [
             float(bp)
             for bp in self._header_dictionary[
-                "%sSPATIAL_BEAM_POSITION" % detector_name
+                f"{detector_name}SPATIAL_BEAM_POSITION"
             ].split()[:2]
         ]
 
@@ -122,9 +122,9 @@ class FormatSMVNOIR(FormatSMVRigaku):
 
         gonio_axes = self.get_gonio_axes(detector_name)
         gonio_values = self.get_gonio_values(detector_name)
-        gonio_units = self._header_dictionary["%sGONIO_UNITS" % detector_name].split()
+        gonio_units = self._header_dictionary[f"{detector_name}GONIO_UNITS"].split()
         gonio_num_axes = int(
-            self._header_dictionary["%sGONIO_NUM_VALUES" % detector_name]
+            self._header_dictionary[f"{detector_name}GONIO_NUM_VALUES"]
         )
 
         rotations = []
@@ -143,7 +143,7 @@ class FormatSMVNOIR(FormatSMVRigaku):
                 )
                 translations.append(gonio_values[j] * axis)
             else:
-                raise RuntimeError("unknown axis unit %s" % unit)
+                raise RuntimeError(f"unknown axis unit {unit}")
 
         rotations.reverse()
         translations.reverse()

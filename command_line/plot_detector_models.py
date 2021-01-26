@@ -148,7 +148,7 @@ def run(args=None):
             try:
                 user_phil.append(parse(arg))
             except Exception:
-                raise Sorry("Unrecognized argument %s" % arg)
+                raise Sorry(f"Unrecognized argument {arg}")
     params = phil_scope.fetch(sources=user_phil).extract()
 
     fig = plt.figure()

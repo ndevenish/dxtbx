@@ -67,9 +67,7 @@ class ExperimentListDict:
         # Basic check: This is a dict-like object. This can happen if e.g. we
         # were passed a DataBlock list instead of an ExperimentList dictionary
         if isinstance(obj, list) or not hasattr(obj, "get"):
-            raise InvalidExperimentListError(
-                "Expected dictionary, not {}".format(type(obj))
-            )
+            raise InvalidExperimentListError(f"Expected dictionary, not {type(obj)}")
 
         self._obj = copy.deepcopy(obj)
         self._check_format = check_format
@@ -146,7 +144,7 @@ class ExperimentListDict:
                     )
                 eobj[name] = mmap[value]
             elif not isinstance(value, int):
-                raise TypeError("expected int or str, got %s" % type(value))
+                raise TypeError(f"expected int or str, got {type(value)}")
 
         return mlist
 
@@ -472,7 +470,7 @@ def _experimentlist_from_file(filename, directory=None):
         with open(filename) as infile:
             return json.load(infile, object_hook=_decode_dict)
     except OSError:
-        raise OSError("unable to read file, %s" % filename)
+        raise OSError(f"unable to read file, {filename}")
 
 
 class ExperimentListFactory:
@@ -495,14 +493,10 @@ class ExperimentListFactory:
                     ExperimentListFactory.from_serialized_format(filename)
                 )
                 if verbose:
-                    print("Loaded experiments from %s" % filename)
+                    print(f"Loaded experiments from {filename}")
             except Exception as e:
                 if verbose:
-                    print(
-                        "Could not load experiments from {}: {}".format(
-                            filename, str(e)
-                        )
-                    )
+                    print(f"Could not load experiments from {filename}: {str(e)}")
                 unhandled.append(filename)
 
         return experiments

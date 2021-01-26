@@ -138,7 +138,7 @@ class single_image_worker(image_worker):
 
     def read(self, path):
         if self.command_line.options.verbose:
-            print("Processing %s" % path)
+            print(f"Processing {path}")
 
         format_class = dxtbx.format.Registry.get_format_class_for_file(path)
         assert not issubclass(
@@ -261,7 +261,7 @@ def run(argv=None):
         # test if the iamge is a multi-image
         datablocks = DataBlockFactory.from_filenames([paths[0]])
         if not datablocks:
-            raise Sorry("Could not read path {}".format(paths[0]))
+            raise Sorry(f"Could not read path {paths[0]}")
 
         assert len(datablocks) == 1
         datablock = datablocks[0]

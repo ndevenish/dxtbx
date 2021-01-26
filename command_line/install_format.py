@@ -15,7 +15,7 @@ def find_format_classes(directory, base_python_path="dxtbx.format"):
         try:
             parsetree = ast.parse(content)
         except SyntaxError:
-            print("  *** Could not parse %s" % name.strpath)
+            print(f"  *** Could not parse {name.strpath}")
             continue
         for top_level_def in parsetree.body:
             if not isinstance(top_level_def, ast.ClassDef):

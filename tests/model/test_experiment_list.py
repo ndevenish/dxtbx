@@ -830,7 +830,7 @@ def test_experimentlist_imagesequence_stills():
     ]
     for f in filenames:
         if not os.path.exists(f):
-            pytest.skip("%s does not exist" % f)
+            pytest.skip(f"{f} does not exist")
     experiments = ExperimentListFactory.from_filenames(filenames)
 
     assert len(experiments) == 3

@@ -568,4 +568,4 @@ class ImageSetFactory:
         elif isinstance(imageset, ImageSequence) or isinstance(imageset, ImageSet):
             return ImageSet(imageset.data(), imageset.indices())
         else:
-            raise ValueError("Unrecognized imageset type: %s" % str(type(imageset)))
+            raise ValueError(f"Unrecognized imageset type: {str(type(imageset))}")

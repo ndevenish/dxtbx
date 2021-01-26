@@ -112,7 +112,7 @@ class FormatNexusJungfrauHack(FormatNexus):
             np.string_("GaAs"): "GaAs",
         }.get(detector_material)
         if not material:
-            raise RuntimeError("Unknown material: %s" % detector_material)
+            raise RuntimeError(f"Unknown material: {detector_material}")
 
         try:
             x_pixel = nx_detector["x_pixel_size"][()] * 1000.0

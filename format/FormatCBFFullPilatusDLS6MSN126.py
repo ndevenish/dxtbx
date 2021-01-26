@@ -53,7 +53,7 @@ class FormatCBFFullPilatusDLS6MSN126(FormatCBFFullPilatus):
 
         else:
             raise RuntimeError(
-                "Don't understand this goniometer: %s" % list(goniometer.get_names())
+                f"Don't understand this goniometer: {list(goniometer.get_names())}"
             )
 
 

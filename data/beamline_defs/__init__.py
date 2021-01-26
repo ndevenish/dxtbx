@@ -18,7 +18,7 @@ def get_beamline_definition(detector_id, **kwargs):
         # http://stackoverflow.com/questions/1546226/a-simple-way-to-remove-multiple-spaces-in-a-string-in-python/15913564#15913564
 
     try:
-        beamline = importlib.import_module("dxtbx.data.beamline_defs.%s" % filename)
+        beamline = importlib.import_module(f"dxtbx.data.beamline_defs.{filename}")
         generator_object = beamline.get_definition(**kwargs)
     except ImportError:
         generator_object = Dummy()
@@ -101,10 +101,7 @@ class template:
         return iotbx.cif.model.block()
 
     def __str__(self):
-        return "CIF block generator for {} ({}.py)".format(
-            self._detector_name,
-            self._block_name,
-        )
+        return f"CIF block generator for {self._detector_name} ({self._block_name}.py)"
 
 
 class Dummy(template):

@@ -21,4 +21,4 @@ def get_pilatus_timestamp(timestamp_string):
         except Exception:
             pass
 
-    raise RuntimeError("timestamp %s not recognised" % timestamp)
+    raise RuntimeError(f"timestamp {timestamp} not recognised")

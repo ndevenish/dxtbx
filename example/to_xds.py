@@ -30,7 +30,7 @@ def xds_detector_name(xia2_name):
     if "raxis" in xia2_name:
         return "RAXIS"
 
-    raise RuntimeError("detector %s unknown" % xia2_name)
+    raise RuntimeError(f"detector {xia2_name} unknown")
 
 
 class to_xds:
@@ -109,15 +109,15 @@ class to_xds:
         x = centre.dot(F)
         y = centre.dot(S)
 
-        print("DETECTOR_DISTANCE= %.3f" % origin.dot(N))
-        print("ORGX= {:.1f} ORGY= {:.1f}".format(x / f, y / s))
+        print(f"DETECTOR_DISTANCE= {origin.dot(N):.3f}")
+        print(f"ORGX= {x / f:.1f} ORGY= {y / s:.1f}")
         print(
             "ROTATION_AXIS= %.3f %.3f %.3f"
             % (R * self.get_goniometer().get_rotation_axis()).elems
         )
-        print("STARTING_ANGLE= %.3f" % self.get_scan().get_oscillation()[0])
-        print("OSCILLATION_RANGE= %.3f" % self.get_scan().get_oscillation()[1])
-        print("X-RAY_WAVELENGTH= %.5f" % self.get_beam().get_wavelength())
+        print(f"STARTING_ANGLE= {self.get_scan().get_oscillation()[0]:.3f}")
+        print(f"OSCILLATION_RANGE= {self.get_scan().get_oscillation()[1]:.3f}")
+        print(f"X-RAY_WAVELENGTH= {self.get_beam().get_wavelength():.5f}")
         print("INCIDENT_BEAM_DIRECTION= %.3f %.3f %.3f" % (-beam).elems)
         print(
             "FRACTION_OF_POLARIZATION= %.3f"
@@ -127,7 +127,7 @@ class to_xds:
             "POLARIZATION_PLANE_NORMAL= %.3f %.3f %.3f"
             % self.get_beam().get_polarization_normal()
         )
-        print("NAME_TEMPLATE_OF_DATA_FRAMES= %s" % self._template.replace("#", "?"))
+        print(f"NAME_TEMPLATE_OF_DATA_FRAMES= {self._template.replace('#', '?')}")
         print("TRUSTED_REGION= 0.0 1.41")
         for f0, f1, s0, s1 in self.get_detector().get_mask():
             print("UNTRUSTED_RECTANGLE= %d %d %d %d" % (f0, f1 + 1, s0, s1 + 1))

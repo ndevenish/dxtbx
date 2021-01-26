@@ -778,4 +778,4 @@ class DetectorFactory:
         elif name.upper() == "UNKNOWN":
             return detector_helper_sensors.SENSOR_UNKNOWN
 
-        raise RuntimeError("name %s not known" % name)
+        raise RuntimeError(f"name {name} not known")

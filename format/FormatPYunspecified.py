@@ -61,7 +61,7 @@ class FormatPYunspecified(FormatPY):
             self.LCLS_detector_address, self._timesec
         )
         self.start_helper(
-            version_token="distl.detector_format_version=%s" % version_lookup
+            version_token=f"distl.detector_format_version={version_lookup}"
         )
 
     def start_helper(self, version_token):

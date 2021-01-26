@@ -105,14 +105,12 @@ def run(args=None, imageset=None):
                 try:
                     user_phil.append(iotbx.phil.parse(arg))
                 except RuntimeError as e:
-                    raise Sorry(
-                        "Unrecognized argument '{}' (error: {})".format(arg, str(e))
-                    )
+                    raise Sorry(f"Unrecognized argument '{arg}' (error: {str(e)})")
             else:
                 try:
-                    user_phil.append(iotbx.phil.parse("""file_path=%s""" % arg))
+                    user_phil.append(iotbx.phil.parse(f"""file_path={arg}"""))
                 except ValueError:
-                    raise Sorry("Unrecognized argument '%s'" % arg)
+                    raise Sorry(f"Unrecognized argument '{arg}'")
         params = master_phil.fetch(sources=user_phil).extract()
     if imageset is None:
         if (
@@ -337,7 +335,7 @@ def run(args=None, imageset=None):
 
             for i, r in enumerate(results):
                 val = xvals[i]
-                if params.output_bins and "%.3f" % r != "nan":
+                if params.output_bins and f"{r:.3f}" != "nan":
                     # logger.write("%9.3f %9.3f\n"%     (val,r))        #.xy  format for Rex.cell.
                     logger.write(
                         "%9.3f %9.3f %9.3f\n", val, r, std_devs[i]
@@ -371,7 +369,7 @@ def run(args=None, imageset=None):
                     def resolution(x, pos):
                         if x <= 0:
                             return "-"
-                        return "%.1f" % (1 / math.sqrt(x))
+                        return f"{1 / math.sqrt(x):.1f}"
 
                     formatter = FuncFormatter(resolution)
                     plt.gca().xaxis.set_major_formatter(formatter)

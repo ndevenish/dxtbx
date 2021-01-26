@@ -305,6 +305,6 @@ def test_compare_example():
         ) = missetting_rot.r3_rotation_matrix_as_unit_quaternion().unit_quaternion_as_axis_and_angle(
             deg=True
         )
-        print("Angular offset is %13.10f deg." % (angle))
+        print(f"Angular offset is {angle:13.10f} deg.")
 
         assert approx_equal(angle, 0.2609472065)

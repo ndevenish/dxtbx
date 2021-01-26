@@ -126,10 +126,10 @@ class EigerNXmxFixer:
         self.data_factory_cache = {}
         for k in sorted(handle_orig["/entry/data"]):
             try:
-                handle_orig_entry = handle_orig["/entry/data/%s" % k]
+                handle_orig_entry = handle_orig[f"/entry/data/{k}"]
                 shape = handle_orig_entry.shape
             except KeyError:
-                delete.append("/entry/data/%s" % k)
+                delete.append(f"/entry/data/{k}")
                 continue
             handle_orig_entry_properties[k] = {
                 "shape": shape,
@@ -207,7 +207,7 @@ class EigerNXmxFixer:
         create_scalar(
             handle["/entry/instrument/detector"],
             "depends_on",
-            "S%d" % len(depends_on),
+            f"S{len(depends_on)}",
             np.string_(depends_on),
         )
 
@@ -291,7 +291,7 @@ class EigerNXmxFixer:
             create_scalar(
                 handle["/entry/sample"],
                 "depends_on",
-                "S%d" % len(dataset.name),
+                f"S{len(dataset.name)}",
                 np.string_(dataset.name),
             )
 
@@ -316,7 +316,7 @@ class FormatHDF5EigerNearlyNexus(FormatHDF5):
 
     def _start(self):
         # Read the file structure
-        temp_file = "tmp_master_%s.nxs" % uuid.uuid1().hex
+        temp_file = f"tmp_master_{uuid.uuid1().hex}.nxs"
         fixer = EigerNXmxFixer(self._image_file, temp_file)
         reader = NXmxReader(handle=fixer.handle)
 

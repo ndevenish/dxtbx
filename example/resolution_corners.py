@@ -28,7 +28,7 @@ def resolution_corners(frame):
         for df in 0, 1:
             corner = origin + nfast * dfast * F * df + nslow * dslow * S * ds
             theta = 0.5 * corner.angle(s0)
-            print("%.3f" % (beam.get_wavelength() / (2 * math.sin(theta))))
+            print(f"{beam.get_wavelength() / (2 * math.sin(theta)):.3f}")
 
 
 if __name__ == "__main__":

@@ -32,10 +32,10 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
 
         name = header["DETECTOR_NAMES"]
 
-        if "%sDETECTOR_DESCRIPTION" % name not in header:
+        if f"{name}DETECTOR_DESCRIPTION" not in header:
             return False
 
-        return "Eiger" in header["%sDETECTOR_DESCRIPTION" % name]
+        return "Eiger" in header[f"{name}DETECTOR_DESCRIPTION"]
 
     def _goniometer(self):
         """Initialize the structure for the goniometer."""
@@ -111,9 +111,9 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
 
         gonio_axes = self.get_gonio_axes(detector_name)
         gonio_values = self.get_gonio_values(detector_name)
-        gonio_units = self._header_dictionary["%sGONIO_UNITS" % detector_name].split()
+        gonio_units = self._header_dictionary[f"{detector_name}GONIO_UNITS"].split()
         gonio_num_axes = int(
-            self._header_dictionary["%sGONIO_NUM_VALUES" % detector_name]
+            self._header_dictionary[f"{detector_name}GONIO_NUM_VALUES"]
         )
 
         rotations = []
@@ -132,7 +132,7 @@ class FormatSMVRigakuEiger(FormatSMVRigaku):
                 )
                 translations.append(gonio_values[j] * axis)
             else:
-                raise RuntimeError("unknown axis unit %s" % unit)
+                raise RuntimeError(f"unknown axis unit {unit}")
 
         rotations.reverse()
         translations.reverse()

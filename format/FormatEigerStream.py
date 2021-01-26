@@ -144,7 +144,7 @@ class FormatEigerStream(FormatMultiImage, Format):
         elif info["encoding"] == "bs32-lz4<":
             data = self.readBSLZ4(data, info["shape"], info["type"], info["size"])
         else:
-            raise OSError("encoding %s is not implemented" % info["encoding"])
+            raise OSError(f"encoding {info['encoding']} is not implemented")
 
         data = np.array(data, ndmin=3)  # handle data, must be 3 dim
         data = data.reshape(data.shape[1:3]).astype("int32")

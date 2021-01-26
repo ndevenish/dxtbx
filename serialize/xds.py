@@ -147,7 +147,7 @@ def xds_detector_name(dxtbx_name):
     if "unknown" in dxtbx_name:
         return "ADSC"
 
-    raise RuntimeError("detector %s unknown" % dxtbx_name)
+    raise RuntimeError(f"detector {dxtbx_name} unknown")
 
 
 class to_xds:
@@ -309,7 +309,7 @@ class to_xds:
 
         if detector == "PILATUS":
             result.append(
-                "SENSOR_THICKNESS= %.3f" % self.get_detector()[0].get_thickness()
+                f"SENSOR_THICKNESS= {self.get_detector()[0].get_thickness():.3f}"
             )
             if self.get_detector()[0].get_material():
                 material = self.get_detector()[0].get_material()
@@ -319,7 +319,7 @@ class to_xds:
                     "!SENSOR_MATERIAL / THICKNESS %s %.3f"
                     % (material, self.get_detector()[0].get_thickness())
                 )
-                result.append("!SILICON= %f" % mu)
+                result.append(f"!SILICON= {mu:f}")
 
         result.append(
             "DIRECTION_OF_DETECTOR_X-AXIS= %.5f %.5f %.5f" % self.detector_x_axis
@@ -331,12 +331,12 @@ class to_xds:
 
         result.append("NX=%d NY=%d QX=%.4f QY=%.4f" % (fast, slow, f, s))
 
-        result.append("DETECTOR_DISTANCE= %.6f" % self.detector_distance)
+        result.append(f"DETECTOR_DISTANCE= {self.detector_distance:.6f}")
         result.append("ORGX= %.2f ORGY= %.2f" % self.detector_origin)
         result.append("ROTATION_AXIS= %.5f %.5f %.5f" % self.rotation_axis)
-        result.append("STARTING_ANGLE= %.3f" % self.starting_angle)
-        result.append("OSCILLATION_RANGE= %.3f" % self.oscillation_range)
-        result.append("X-RAY_WAVELENGTH= %.5f" % self.wavelength)
+        result.append(f"STARTING_ANGLE= {self.starting_angle:.3f}")
+        result.append(f"OSCILLATION_RANGE= {self.oscillation_range:.3f}")
+        result.append(f"X-RAY_WAVELENGTH= {self.wavelength:.5f}")
         result.append(
             "INCIDENT_BEAM_DIRECTION= %.3f %.3f %.3f"
             % tuple([b / self.wavelength for b in self.beam_vector])
@@ -355,7 +355,7 @@ class to_xds:
         template = self.get_template()
         if template.endswith("master.h5"):
             template = template.replace("master", "??????")
-        result.append("NAME_TEMPLATE_OF_DATA_FRAMES= %s" % template.replace("#", "?"))
+        result.append(f"NAME_TEMPLATE_OF_DATA_FRAMES= {template.replace('#', '?')}")
         result.append("TRUSTED_REGION= 0.0 1.41")
 
         for panel, (x0, _, y0, _) in zip(self.get_detector(), self.panel_limits):
@@ -371,7 +371,7 @@ class to_xds:
             start_end = (1, start_end[1])
 
         result.append("DATA_RANGE= %d %d" % start_end)
-        result.append("JOB=%s" % job_card)
+        result.append(f"JOB={job_card}")
         if space_group_number is not None:
             result.append("SPACE_GROUP_NUMBER= %i" % space_group_number)
         if [real_space_a, real_space_b, real_space_c].count(None) == 0:
@@ -400,7 +400,7 @@ class to_xds:
                     % self.panel_y_axis[panel_id]
                 )
 
-                result.append("SEGMENT_DISTANCE= %.3f" % self.panel_distance[panel_id])
+                result.append(f"SEGMENT_DISTANCE= {self.panel_distance[panel_id]:.3f}")
 
                 result.append(
                     "SEGMENT_ORGX= %.2f SEGMENT_ORGY= %.2f"

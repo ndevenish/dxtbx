@@ -256,7 +256,7 @@ def test_format_class_API_assumptions(test_image):
                 print("Not matching ", filename, "to", format_class)
                 continue
             understood = format_class.understand(filename)
-            print("{}{}: {}".format("  " * level, subformat, understood))
+            print(f"{'  ' * level}{subformat}: {understood}")
             if understood:
                 recursive_format_class, subtree_multiple = recurse(
                     subformat, filename, level + 1

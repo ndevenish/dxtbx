@@ -17,15 +17,15 @@ class FormatSMVRigakuA200SPring8BL26B1(FormatSMVRigakuA200):
 
         detector_prefix = header["DETECTOR_NAMES"].split()[0].strip()
 
-        test = "{}{}".format(detector_prefix, "DETECTOR_IDENTIFICATION")
+        test = f"{detector_prefix}DETECTOR_IDENTIFICATION"
         if header.get(test) != "MSC_REIT_A200_SN09250183":
             return False
 
-        test = "{}{}".format(detector_prefix, "DETECTOR_DESCRIPTION")
+        test = f"{detector_prefix}DETECTOR_DESCRIPTION"
         if not header.get(test).startswith("A200"):
             return False
 
-        test = "{}{}".format(detector_prefix, "GONIO_DESCRIPTION")
+        test = f"{detector_prefix}GONIO_DESCRIPTION"
         if not header.get(test).startswith("SPring-8"):
             return False
 

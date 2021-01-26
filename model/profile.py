@@ -19,10 +19,9 @@ class ProfileModelFactory:
             if entry_point.name == obj["__id__"]:
                 return entry_point.load().from_dict(obj)
         logging.getLogger("dxtbx.model.profile").warn(
-            "No profile class %s registered" % obj["__id__"]
+            f"No profile class {obj['__id__']} registered"
         )
         print(
-            "dxtbx.model.profile: WARNING: No profile class %s registered"
-            % obj["__id__"]
+            f"dxtbx.model.profile: WARNING: No profile class {obj['__id__']} registered"
         )
         return None

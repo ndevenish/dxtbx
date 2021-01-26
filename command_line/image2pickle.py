@@ -162,7 +162,7 @@ def run(args=None):
 
     for imgpath in paths:
         if command_line.options.verbose:
-            print("Reading %s" % (imgpath))
+            print(f"Reading {imgpath}")
 
         try:
             img = dxtbx.load(imgpath)
@@ -174,7 +174,7 @@ def run(args=None):
                 raw_data = np.loadtxt(imgpath)
                 raw_data = flex.double(raw_data.astype(np.double))
             except ValueError:
-                raise Usage("Couldn't load %s, no supported readers" % imgpath)
+                raise Usage(f"Couldn't load {imgpath}, no supported readers")
 
             detector = None
             beam = None
@@ -320,7 +320,7 @@ def save_image(
         )
     if command_line.options.skip_converted and os.path.isfile(destpath):
         if command_line.options.verbose:
-            print("Skipping %s, file exists" % imgpath)
+            print(f"Skipping {imgpath}, file exists")
             return
 
     data = dpack(

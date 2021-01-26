@@ -142,19 +142,19 @@ def run(args=None):
         rmsd = 1000 * math.sqrt(
             (reference_sites - moving_sites).sum_sq() / len(reference_sites)
         )
-        print("RMSD before fit: %.1f microns" % rmsd)
+        print(f"RMSD before fit: {rmsd:.1f} microns")
         if params.fit_target == "corners":
             rmsd = rmsd_from_centers(reference_sites, moving_sites)
-            print("RMSD of centers before fit: %.1f microns" % rmsd)
+            print(f"RMSD of centers before fit: {rmsd:.1f} microns")
         lsq = least_squares_fit(reference_sites, moving_sites)
         rmsd = 1000 * math.sqrt(
             (reference_sites - lsq.other_sites_best_fit()).sum_sq()
             / len(reference_sites)
         )
-        print("RMSD of fit: %.1f microns" % rmsd)
+        print(f"RMSD of fit: {rmsd:.1f} microns")
         if params.fit_target == "corners":
             rmsd = rmsd_from_centers(reference_sites, lsq.other_sites_best_fit())
-            print("RMSD of fit of centers: %.1f microns" % rmsd)
+            print(f"RMSD of fit of centers: {rmsd:.1f} microns")
         (
             angle,
             axis,
@@ -223,10 +223,10 @@ def run(args=None):
     rmsd = 1000 * math.sqrt(
         (reference_sites - moved_sites).sum_sq() / len(reference_sites)
     )
-    print("RMSD of fit after movement: %.1f microns" % rmsd)
+    print(f"RMSD of fit after movement: {rmsd:.1f} microns")
     if params.fit_target == "corners":
         rmsd = rmsd_from_centers(reference_sites, moved_sites)
-        print("RMSD of fit of centers after movement: %.1f microns" % rmsd)
+        print(f"RMSD of fit of centers after movement: {rmsd:.1f} microns")
 
     if params.panel_list is not None:
         reference_sites = flex.vec3_double()
@@ -256,7 +256,7 @@ def run(args=None):
         rmsd = 1000 * math.sqrt(
             (reference_sites - moved_sites).sum_sq() / len(reference_sites)
         )
-        print("RMSD of whole detector fit after movement: %.1f microns" % rmsd)
+        print(f"RMSD of whole detector fit after movement: {rmsd:.1f} microns")
         if params.fit_target == "corners":
             rmsd = rmsd_from_centers(reference_sites, moved_sites)
             print(

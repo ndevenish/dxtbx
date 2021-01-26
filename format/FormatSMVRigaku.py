@@ -40,7 +40,7 @@ class FormatSMVRigaku(FormatSMV):
 
         if len(detector_prefixes) == 1:
             prefix = detector_prefixes[0]
-            det_desc = "%sDETECTOR_DESCRIPTION" % prefix
+            det_desc = f"{prefix}DETECTOR_DESCRIPTION"
             if "CMOS-1" in header.get(det_desc, ""):
                 return False
 

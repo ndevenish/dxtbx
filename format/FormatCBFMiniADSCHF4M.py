@@ -32,7 +32,7 @@ def get_adsc_timestamp(timestamp):
         except Exception:
             pass
 
-    raise RuntimeError("timestamp %s not recognised" % timestamp)
+    raise RuntimeError(f"timestamp {timestamp} not recognised")
 
 
 class FormatCBFMiniADSCHF4M(FormatCBFMini):

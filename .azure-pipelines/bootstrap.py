@@ -145,7 +145,7 @@ environments exist and are working.
     if not os.path.isfile(filename):
         raise RuntimeError(f"The file {filename} is not available")
 
-    python_requirement = "conda-forge::python=%s.*" % python
+    python_requirement = f"conda-forge::python={python}.*"
 
     # make a new environment directory
     prefix = os.path.realpath("conda_base")
@@ -174,11 +174,7 @@ environments exist and are working.
             .replace("<", "^<")
             .replace(">", "^>"),
         ]
-    print(
-        "Installing dxtbx environment from {filename} with Python {python}".format(
-            filename=filename, python=python
-        )
-    )
+    print(f"Installing dxtbx environment from {filename} with Python {python}")
     for retry in range(5):
         retry += 1
         try:
@@ -216,7 +212,7 @@ channels:
 
 
 def run_command(command, workdir):
-    print("Running {} (in {})".format(" ".join(command), workdir))
+    print(f"Running {' '.join(command)} (in {workdir})")
     workdir = os.path.abspath(workdir)
     try:
         os.makedirs(workdir)
@@ -228,7 +224,7 @@ def run_command(command, workdir):
         if isinstance(e, OSError):
             if e.errno == 2:
                 executable = os.path.normpath(os.path.join(workdir, command[0]))
-                raise RuntimeError("Could not run %s: File not found" % executable)
+                raise RuntimeError(f"Could not run {executable}: File not found")
         if "child_traceback" in dir(e):
             print("Calling subprocess resulted in error; ", e.child_traceback)
         raise e
@@ -240,7 +236,7 @@ def run_command(command, workdir):
         p.terminate()
         raise
     if p.returncode:
-        sys.exit("Process failed with return code %s" % p.returncode)
+        sys.exit(f"Process failed with return code {p.returncode}")
 
 
 def run_indirect_command(command, args):
@@ -248,7 +244,7 @@ def run_indirect_command(command, args):
     if os.name == "nt":
         filename = os.path.join("build", "indirection.cmd")
         with open(filename, "w") as fh:
-            fh.write("call %s\\conda_base\\condabin\\activate.bat\r\n" % os.getcwd())
+            fh.write(f"call {os.getcwd()}\\conda_base\\condabin\\activate.bat\r\n")
             fh.write("shift\r\n")
             fh.write("%*\r\n")
         command = command + ".bat"
@@ -257,8 +253,8 @@ def run_indirect_command(command, args):
         filename = os.path.join("build", "indirection.sh")
         with open(filename, "w") as fh:
             fh.write("#!/bin/bash\n")
-            fh.write("source %s/conda_base/etc/profile.d/conda.sh\n" % os.getcwd())
-            fh.write("conda activate %s/conda_base\n" % os.getcwd())
+            fh.write(f"source {os.getcwd()}/conda_base/etc/profile.d/conda.sh\n")
+            fh.write(f"conda activate {os.getcwd()}/conda_base\n")
             fh.write('"$@"\n')
         make_executable(filename)
         indirection = ["./indirection.sh"]
@@ -559,7 +555,7 @@ def git(module, git_available, ssh_available, settings):
             return (
                 module,
                 "OK",
-                "Checked out revision {} ({})".format(output[0], output[1]),
+                f"Checked out revision {output[0]} ({output[1]})",
             )
         return module, "OK", "Checked out revision " + output[0].strip()
 
@@ -583,7 +579,7 @@ def git(module, git_available, ssh_available, settings):
             print("Error downloading", url)
             raise
         unzip(filename, destination, trim_directory=1)
-        return module, "OK", "Downloaded branch %s from static archive" % remote_branch
+        return module, "OK", f"Downloaded branch {remote_branch} from static archive"
 
     if ssh_available:
         remote_pattern = "git@github.com:%s.git"
@@ -668,9 +664,7 @@ def git(module, git_available, ssh_available, settings):
                 "-B",
                 settings["branch-local"],
                 "--track",
-                "{}/{}".format(
-                    "upstream" if secondary_remote else "origin", remote_branch
-                ),
+                f"{'upstream' if secondary_remote else 'origin'}/{remote_branch}",
             ],
             cwd=destination,
             env=clean_env,
@@ -751,12 +745,12 @@ def update_sources(options):
 
     for source, setting in options.branch:
         if source not in repositories:
-            sys.exit("Unknown repository %s" % source)
+            sys.exit(f"Unknown repository {source}")
         setting = re.match(
             r"^(?:(\w+/\w+)@?)?([a-zA-Z0-9._\-]+)?(?::([a-zA-Z0-9._\-]+))?$", setting
         )
         if not setting:
-            sys.exit("Could not parse the branch setting for repository %s" % source)
+            sys.exit(f"Could not parse the branch setting for repository {source}")
         _repository, _branch_remote, _branch_local = setting.groups()
         if _repository:
             repositories[source] = {
@@ -880,7 +874,7 @@ def repository_at_tag(string):
         return (repository, tag)
     except ValueError:
         raise argparse.ArgumentTypeError(
-            "%s does not follow the repository@branch format" % string
+            f"{string} does not follow the repository@branch format"
         )
 
 
@@ -946,7 +940,7 @@ def run():
         make_build()
         refresh_build()
 
-    print("\nBootstrap success: %s" % ", ".join(options.actions))
+    print(f"\nBootstrap success: {', '.join(options.actions)}")
 
 
 if __name__ == "__main__":

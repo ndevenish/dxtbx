@@ -98,7 +98,7 @@ class FormatCBFMiniEigerDLS16MSN160(FormatCBFMiniEiger):
 
         else:
             raise ValueError(
-                "Don't understand this goniometer: %s" % list(goniometer.get_names())
+                f"Don't understand this goniometer: {list(goniometer.get_names())}"
             )
 
 

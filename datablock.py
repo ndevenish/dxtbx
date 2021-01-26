@@ -380,12 +380,12 @@ class DataBlockTemplateImporter:
 
             # Check if we've matched any filenames
             if len(paths) == 0:
-                raise ValueError('Template "%s" does not match any files' % template)
+                raise ValueError(f'Template "{template}" does not match any files')
 
             # Get the format from the first image
             fmt = FormatChecker().find_format(paths[0])
             if fmt is None:
-                raise ValueError("Image file %s format is unknown" % paths[0])
+                raise ValueError(f"Image file {paths[0]} format is unknown")
             elif fmt.is_abstract():
                 raise ValueError(
                     f"Image file {paths[0]} appears to be a '{type(fmt).__name__}', but this is an abstract Format"
@@ -595,7 +595,7 @@ class ImageMetadataRecord:
             ("index", self.index),
         ]
         itemstr = ", ".join(x + "=" + repr(y) for x, y in items)
-        return "<{}{}{}>".format(type(self).__name__, " " if itemstr else "", itemstr)
+        return f"<{type(self).__name__}{' ' if itemstr else ''}{itemstr}>"
 
     def __hash__(self):
         return hash(
@@ -1184,14 +1184,12 @@ class DataBlockDictImporter:
             return [self._load_datablocks(dd, check_format, directory) for dd in obj]
         elif not isinstance(obj, dict):
             raise InvalidDataBlockError(
-                "Unexpected datablock type {} instead of dict".format(type(obj))
+                f"Unexpected datablock type {type(obj)} instead of dict"
             )
         # Make sure the id signature is correct
         if not obj.get("__id__") == "DataBlock":
             raise InvalidDataBlockError(
-                "Expected __id__ 'DataBlock', but found {}".format(
-                    repr(obj.get("__id__"))
-                )
+                f"Expected __id__ 'DataBlock', but found {repr(obj.get('__id__'))}"
             )
 
         # Get the list of models
@@ -1414,7 +1412,7 @@ class DataBlockDictImporter:
                     iset.update_detector_px_mm_data()
                 imagesets.append(iset)
             else:
-                raise RuntimeError("expected ImageSet/ImageSequence, got %s" % ident)
+                raise RuntimeError(f"expected ImageSet/ImageSequence, got {ident}")
 
         return DataBlock(imagesets)
 
@@ -1698,9 +1696,9 @@ class BeamDiff:
         if abs(aw - bw) > self.wavelength_tolerance:
             text.append(f" Wavelength: {aw:f}, {bw:f}")
         if abs(ad.angle(bd)) > self.direction_tolerance:
-            text.append(" Direction: {}, {}".format(tuple(ad), tuple(bd)))
+            text.append(f" Direction: {tuple(ad)}, {tuple(bd)}")
         if abs(an.angle(bn)) > self.polarization_normal_tolerance:
-            text.append(" Polarization Normal: {}, {}".format(tuple(an), tuple(bn)))
+            text.append(f" Polarization Normal: {tuple(an)}, {tuple(bn)}")
         if abs(af - bf) > self.polarization_fraction_tolerance:
             text.append(f" Polarization Fraction: {af}, {bf}")
         if len(text) > 0:
@@ -1722,7 +1720,7 @@ class DetectorDiff:
     def __call__(self, a, b):
         text = []
         if len(a) != len(b):
-            text.append("Num Panels: %d, %d" % (len(a), len(b)))
+            text.append(f"Num Panels: {len(a)}, {len(b)}")
         for i, (aa, bb) in enumerate(zip(a, b)):
             a_image_size = aa.get_image_size()
             b_image_size = bb.get_image_size()
@@ -1781,7 +1779,7 @@ class GoniometerDiff:
         b_setting = b.get_setting_rotation()
         text = []
         if abs(a_axis.angle(b_axis)) > self.rotation_axis_tolerance:
-            text.append(" Rotation axis: {}, {}".format(tuple(a_axis), tuple(b_axis)))
+            text.append(f" Rotation axis: {tuple(a_axis)}, {tuple(b_axis)}")
         if not _all_approx_equal(a_fixed, b_fixed, self.fixed_rotation_tolerance):
             text.append(f" Fixed rotation: {a_fixed}, {b_fixed}")
         if not _all_approx_equal(a_setting, b_setting, self.setting_rotation_tolerance):

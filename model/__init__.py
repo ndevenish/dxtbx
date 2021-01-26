@@ -523,7 +523,7 @@ class _:
 class _:
     def __repr__(self):
         if len(self):
-            return "ExperimentList([{}])".format(", ".join(repr(x) for x in self))
+            return f"ExperimentList([{', '.join(repr(x) for x in self)}])"
         else:
             return "ExperimentList()"
 
@@ -653,7 +653,7 @@ class _:
                     r["single_file_indices"] = list(imset.indices())
             else:
                 raise TypeError(
-                    "expected ImageSet or ImageSequence, got %s" % type(imset)
+                    f"expected ImageSet or ImageSequence, got {type(imset)}"
                 )
             r["mask"] = imset.external_lookup.mask.filename
             r["gain"] = imset.external_lookup.gain.filename

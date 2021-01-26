@@ -28,17 +28,17 @@ for _, name, _ in pkgutil.iter_modules(dxtbx.format.__path__):
     except Exception:
         fid = None
     if not fid:
-        print("  *** Could not read %s" % name)
+        print(f"  *** Could not read {name}")
         continue
     if desc[0] == ".pyc":
-        print("  *** %s only present in compiled form, ignoring" % name)
+        print(f"  *** {name} only present in compiled form, ignoring")
         continue
     content = fid.read()
     fid.close()
     try:
         parsetree = ast.parse(content)
     except SyntaxError:
-        print("  *** Could not parse %s" % name)
+        print(f"  *** Could not parse {name}")
         continue
     for top_level_def in parsetree.body:
         if not isinstance(top_level_def, ast.ClassDef):

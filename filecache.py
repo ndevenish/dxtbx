@@ -78,15 +78,13 @@ class lazy_file_cache:
         self._reference_counter = 0
         self._reference_counter_lock = Lock()
 
-        self._debug(
-            "Created cache object for {}: {}".format(str(file_object), str(self))
-        )
+        self._debug(f"Created cache object for {str(file_object)}: {str(self)}")
 
     def _debug(self, string):
         pass
 
     def _debug_enable(self, string):
-        print("{}: {}".format(format(id(self), "#x"), string))
+        print(f"{format(id(self), '#x')}: {string}")
 
     def __del__(self):
         """Close file handles and drop cache on garbage collection."""
@@ -165,7 +163,7 @@ class lazy_file_cache:
             data = self._file.read(self._cache_limit - self._cache_size)
             self._cache_object.seek(self._cache_size)
             self._cache_object.write(data)
-            self._debug("Read %d bytes" % len(data))
+            self._debug(f"Read {len(data)} bytes")
             self._cache_size += len(data)
 
             if self._cache_size >= self._cache_limit:
@@ -182,7 +180,7 @@ class lazy_file_cache:
         if self._closed:
             self._debug("Instance tried to access closed cache")
             raise OSError(
-                "Accessing lazy file cache %s after closing is not allowed" % str(self)
+                f"Accessing lazy file cache {str(self)} after closing is not allowed"
             )
 
     def _close_file(self):
@@ -200,7 +198,7 @@ class lazy_file_cache:
     def close(self):
         if not self._closing:
             self._closing = True
-            self._debug("Closing lazy cache %s" % str(self))
+            self._debug(f"Closing lazy cache {str(self)}")
             with self._reference_counter_lock:
                 if self._reference_counter == 0:
                     self.force_close()

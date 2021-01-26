@@ -72,7 +72,7 @@ def dataset_as_flex(dataset, selection):
         ]:
             return dataset_as_flex_double(dataset.id.id, selection)
         else:
-            assert False, "unknown floating data type (%s)" % str(dataset.dtype)
+            assert False, f"unknown floating data type ({str(dataset.dtype)})"
 
 
 class NXValidationError(RuntimeError):
@@ -194,16 +194,16 @@ def visit_dependencies(nx_file, item, visitor=None):
         if visitor:
             visitor(nx_file, depends_on)
         if depends_on in dependency_chain:
-            raise RuntimeError("'%s' is a circular dependency" % depends_on)
+            raise RuntimeError(f"'{depends_on}' is a circular dependency")
         try:
             _ = nx_file[depends_on]
         except Exception:
-            raise RuntimeError("'%s' is missing from nx_file" % depends_on)
+            raise RuntimeError(f"'{depends_on}' is missing from nx_file")
         dependency_chain.add(depends_on)
         try:
             depends_on = h5str(nx_file[depends_on].attrs["depends_on"])
         except Exception:
-            raise RuntimeError("'%s' contains no depends_on attribute" % depends_on)
+            raise RuntimeError(f"'{depends_on}' contains no depends_on attribute")
 
 
 def construct_vector(nx_file, item, vector=None):
@@ -234,10 +234,10 @@ def construct_vector(nx_file, item, vector=None):
                 elif units == "deg":
                     deg = True
                 else:
-                    raise RuntimeError("Invalid units: %s" % units)
+                    raise RuntimeError(f"Invalid units: {units}")
                 self.vector.rotate(axis=vector, angle=value, deg=deg)
             else:
-                raise RuntimeError("Unknown transformation_type: %s" % ttype)
+                raise RuntimeError(f"Unknown transformation_type: {ttype}")
 
     if vector is None:
         value = nx_file[item][()]
@@ -288,7 +288,7 @@ def construct_axes(nx_file, item, vector=None):
                 if units == "rad":
                     value *= 180 / math.pi
                 elif units not in ["deg", "degree", "degrees"]:
-                    raise RuntimeError("Invalid units: %s" % units)
+                    raise RuntimeError(f"Invalid units: {units}")
 
                 # is the axis moving? Check the values for this axis
                 v = item[...]
@@ -306,7 +306,7 @@ def construct_axes(nx_file, item, vector=None):
                 self._is_scan_axis.append(is_scan_axis)
 
             else:
-                raise RuntimeError("Unknown transformation_type: %s" % ttype)
+                raise RuntimeError(f"Unknown transformation_type: {ttype}")
 
         def result(self):
             if self._is_scan_axis.count(True) == 0:
@@ -315,7 +315,7 @@ def construct_axes(nx_file, item, vector=None):
             else:
                 assert (
                     self._is_scan_axis.count(True) == 1
-                ), "Only one axis can be a scan axis: %s" % list(self._is_scan_axis)
+                ), f"Only one axis can be a scan axis: {list(self._is_scan_axis)}"
                 scan_axis = flex.first_index(self._is_scan_axis, True)
 
             # Rotate 180 about up from McStas coordinate system
@@ -380,7 +380,7 @@ class NXdetector:
 
         # Check we've got some stuff
         if not self.modules:
-            raise NXValidationError("No NXdetector_module in %s" % self.handle.name)
+            raise NXValidationError(f"No NXdetector_module in {self.handle.name}")
 
 
 class NXinstrument:
@@ -398,7 +398,7 @@ class NXinstrument:
 
         # Check we've got stuff
         if not self.detectors:
-            raise NXValidationError("No NXdetector in %s" % self.handle.name)
+            raise NXValidationError(f"No NXdetector in {self.handle.name}")
 
         # Find any detector groups
         self.detector_groups = []
@@ -468,11 +468,11 @@ class NXmxEntry:
 
         # Check we've got some stuff
         if not self.instruments:
-            raise NXValidationError("No NXinstrument in %s" % self.handle.name)
+            raise NXValidationError(f"No NXinstrument in {self.handle.name}")
         if not self.samples:
-            raise NXValidationError("No NXsample in %s" % self.handle.name)
+            raise NXValidationError(f"No NXsample in {self.handle.name}")
         if not self.data:
-            raise NXValidationError("No NXdata in %s" % self.handle.name)
+            raise NXValidationError(f"No NXdata in {self.handle.name}")
 
 
 class NXmxReader:
@@ -493,7 +493,7 @@ class NXmxReader:
         # Check we've got some stuff
         if not self.entries:
             raise RuntimeError(
-                "Error reading NXmxfile %r. No NXmx entries in file" % filename
+                f"Error reading NXmxfile {filename!r}. No NXmx entries in file"
             )
 
     def print_description(self):
@@ -501,32 +501,32 @@ class NXmxReader:
         Print a description of the NXmx file
 
         """
-        print(" > Found %d NXmx entries" % len(self.entries))
+        print(f" > Found {len(self.entries)} NXmx entries")
         for entry in self.entries:
             handle = entry.handle
             instruments = entry.instruments
             samples = entry.samples
-            print("  > %s" % handle.name)
+            print(f"  > {handle.name}")
             beams = []
             for instrument in instruments:
                 handle = instrument.handle
                 beams += instrument.beams
                 detectors = instrument.detectors
-                print("   > %s" % handle.name)
+                print(f"   > {handle.name}")
                 for detector in detectors:
                     handle = detector.handle
                     modules = detector.modules
-                    print("    > %s" % handle.name)
+                    print(f"    > {handle.name}")
                     for module in modules:
                         handle = module.handle
-                        print("     > %s" % handle.name)
+                        print(f"     > {handle.name}")
             for sample in samples:
                 handle = sample.handle
                 beams += sample.beams
-                print("   > %s" % handle.name)
+                print(f"   > {handle.name}")
             for beam in beams:
                 handle = beam.handle
-                print("    > %s" % handle.name)
+                print(f"    > {handle.name}")
 
 
 def is_nexus_file(filename):
@@ -663,7 +663,7 @@ def get_change_of_basis(transformation):
         elif units in ["deg", "degree", "degrees"]:
             deg = True
         else:
-            raise RuntimeError("Invalid units: %s" % units)
+            raise RuntimeError(f"Invalid units: {units}")
         r3 = vector.axis_and_angle_as_r3_rotation_matrix(setting, deg=deg)
         cob = sqr(
             (
@@ -709,7 +709,7 @@ def get_change_of_basis(transformation):
             )
         )
     else:
-        raise ValueError("Unrecognized tranformation type: %s" % axis_type)
+        raise ValueError(f"Unrecognized tranformation type: {axis_type}")
 
     return cob
 
@@ -951,7 +951,7 @@ class DetectorFactoryFromGroup:
                         "GaAs": "GaAs",
                     }.get(value)
                     if not material:
-                        raise RuntimeError("Unknown material: %s" % value)
+                        raise RuntimeError(f"Unknown material: {value}")
                     p.set_material(material)
 
                     # Compute the attenuation coefficient.
@@ -1017,7 +1017,7 @@ class DetectorFactory:
         }.get(h5str(nx_detector["sensor_material"][()]))
         if not material:
             raise RuntimeError(
-                "Unknown material: %s" % nx_detector["sensor_material"][()]
+                f"Unknown material: {nx_detector['sensor_material'][()]}"
             )
 
         try:
@@ -1435,7 +1435,7 @@ def detectorgroupdatafactory(obj, instrument):
                 if detector_name in mapping:
                     assert (
                         dataset_name not in mapping[detector_name]["dataset_names"]
-                    ), ("Dataset %s found in > 1 NXdetectors" % dataset_name)
+                    ), f"Dataset {dataset_name} found in > 1 NXdetectors"
                     mapping[detector_name]["dataset_names"].add(dataset_name)
                     mapping[detector_name]["datasets"].append(dataset)
                 else:
@@ -1444,7 +1444,7 @@ def detectorgroupdatafactory(obj, instrument):
                         "datasets": [dataset],
                         "detector": detector,
                     }
-        assert found_it, "Couldn't match dataset %s to a NXdetector" % dataset_name
+        assert found_it, f"Couldn't match dataset {dataset_name} to a NXdetector"
 
     # Create a list of multipanel datalist objects
     return DetectorGroupDataList(

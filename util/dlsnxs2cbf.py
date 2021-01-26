@@ -51,7 +51,7 @@ def get_distance_in_mm(f):
         d *= 1000
     elif D.attrs["units"] != np.string_("mm"):
         raise RuntimeError(
-            "unknown distance unit '%s'" % D.attrs["units"].decode("latin-1")
+            f"unknown distance unit '{D.attrs['units'].decode('latin-1')}'"
         )
     return d
 
@@ -92,12 +92,12 @@ def compute_cbf_header(f, nn=0):
 _array_data.header_contents
 ;"""
     )
-    result.append("# Detector: EIGER 2XE 16M S/N 160-0001 Diamond %s" % name)
-    result.append("# %s" % timestamp)
+    result.append(f"# Detector: EIGER 2XE 16M S/N 160-0001 Diamond {name}")
+    result.append(f"# {timestamp}")
     result.append("# Pixel_size 75e-6 m x 75e-6 m")
     result.append("# Silicon sensor, thickness 0.000450 m")
-    result.append("# Exposure_time %.5f s" % T)
-    result.append("# Exposure_period %.5f s" % T)
+    result.append(f"# Exposure_time {T:.5f} s")
+    result.append(f"# Exposure_period {T:.5f} s")
     result.append("# Tau = 1e-9 s")
     result.append("# Count_cutoff 65535 counts")
     result.append("# Threshold_setting: 0 eV")
@@ -105,22 +105,22 @@ _array_data.header_contents
     result.append("# N_excluded_pixels = 0")
     result.append("# Excluded_pixels: badpix_mask.tif")
     result.append("# Flat_field: (nil)")
-    result.append("# Wavelength %.5f A" % L)
-    result.append("# Detector_distance %.5f m" % (D / 1000.0))
+    result.append(f"# Wavelength {L:.5f} A")
+    result.append(f"# Detector_distance {D / 1000.0:.5f} m")
     result.append(f"# Beam_xy ({Bx:.2f}, {By:.2f}) pixels")
     result.append("# Flux 0.000000")
-    result.append("# Filter_transmission %.3f" % A)
-    result.append("# Start_angle %.4f deg." % omega[nn])
-    result.append("# Angle_increment %.4f deg." % omega_increment[nn])
+    result.append(f"# Filter_transmission {A:.3f}")
+    result.append(f"# Start_angle {omega[nn]:.4f} deg.")
+    result.append(f"# Angle_increment {omega_increment[nn]:.4f} deg.")
     result.append("# Detector_2theta 0.0000 deg.")
     result.append("# Polarization 0.990")
     result.append("# Alpha 0.0000 deg.")
     result.append("# Kappa 0.0000 deg.")
-    result.append("# Phi %.4f deg." % phi)
+    result.append(f"# Phi {phi:.4f} deg.")
     result.append("# Phi_increment 0.0000 deg.")
-    result.append("# Omega %.4f deg." % omega[nn])
-    result.append("# Omega_increment %.4f deg." % omega_increment[nn])
-    result.append("# Chi %.4f deg." % chi)
+    result.append(f"# Omega {omega[nn]:.4f} deg.")
+    result.append(f"# Omega_increment {omega_increment[nn]:.4f} deg.")
+    result.append(f"# Chi {chi:.4f} deg.")
     result.append("# Chi_increment 0.0000 deg.")
     result.append("# Oscillation_axis X.CW")
     result.append("# N_oscillations 1")
