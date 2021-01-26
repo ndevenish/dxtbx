@@ -150,8 +150,9 @@ class ExperimentListDict:
 
         return mlist
 
-    def _load_pickle_path(self, imageset_data, param):
-        # type: (Dict, str) -> Tuple[Optional[str], Any]
+    def _load_pickle_path(
+        self, imageset_data: Dict, param: str
+    ) -> Tuple[Optional[str], Any]:
         """
         Read a filename from an imageset dict and load if required.
 

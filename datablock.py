@@ -494,12 +494,11 @@ class ImageMetadataRecord:
 
     def merge_metadata_from(
         self,
-        other_record,
-        compare_beam=operator.__eq__,
-        compare_detector=operator.__eq__,
-        compare_goniometer=operator.__eq__,
-    ):
-        # type: (ImageMetadataRecord, Callable, Callable, Callable) -> bool
+        other_record: ImageMetadataRecord,
+        compare_beam: Callable = operator.__eq__,
+        compare_detector: Callable = operator.__eq__,
+        compare_goniometer: Callable = operator.__eq__,
+    ) -> bool:
         """
         Compare two record objects and merge equivalent data.
 
@@ -544,8 +543,7 @@ class ImageMetadataRecord:
         return record_altered
 
     @classmethod
-    def from_format(cls, fmt):
-        # type: (Format) -> Any
+    def from_format(cls, fmt: Format) -> Any:
         """
         Read metadata information from a Format instance.
 
@@ -706,8 +704,9 @@ def _merge_model_metadata(
         )
 
 
-def _merge_scans(records, scan_tolerance=None):
-    # type: (Iterable[ImageMetadataRecord], float) -> List[ImageMetadataRecord]
+def _merge_scans(
+    records: Iterable[ImageMetadataRecord], scan_tolerance: float = None
+) -> List[ImageMetadataRecord]:
     """
     Merge consecutive scan records with identical metadata.
 
@@ -767,8 +766,9 @@ def _merge_scans(records, scan_tolerance=None):
     return merged_records
 
 
-def _create_imagesequence(record, format_class, format_kwargs=None):
-    # type: (ImageMetadataRecord, Type[Format], Dict) -> dxtbx.imageset.ImageSequence
+def _create_imagesequence(
+    record: ImageMetadataRecord, format_class: Type[Format], format_kwargs: Dict = None
+) -> dxtbx.imageset.ImageSequence:
     """
     Create an ImageSequence object from a single rotation data image.
 
@@ -797,8 +797,9 @@ def _create_imagesequence(record, format_class, format_kwargs=None):
     return sequence
 
 
-def _groupby_template_is_none(records):
-    # type: (Iterable[ImageMetadataRecord]) -> Generator[List[ImageMetadataRecord]]
+def _groupby_template_is_none(
+    records: Iterable[ImageMetadataRecord],
+) -> Generator[List[ImageMetadataRecord]]:
     """Specialization of groupby that groups records by format=None"""
     for _, group in itertools.groupby(
         enumerate(records), key=lambda x: -1 if x[1].template is None else x[0]
@@ -806,8 +807,11 @@ def _groupby_template_is_none(records):
         yield list(x[1] for x in group)
 
 
-def _convert_to_imagesets(records, format_class, format_kwargs=None):
-    # type: (Iterable[ImageMetadataRecord], Type[dxtbx.format.Format], Dict) -> Generator[dxtbx.imageset.ImageSet]
+def _convert_to_imagesets(
+    records: Iterable[ImageMetadataRecord],
+    format_class: Type[dxtbx.format.Format],
+    format_kwargs: Dict = None,
+) -> Generator[dxtbx.imageset.ImageSet]:
     """
     Convert records into imagesets.
 
@@ -840,8 +844,11 @@ def _convert_to_imagesets(records, format_class, format_kwargs=None):
             yield _create_imageset(setgroup, format_class, format_kwargs)
 
 
-def _create_imageset(records, format_class, format_kwargs=None):
-    # type: (Iterable[ImageMetadataRecord], Type[dxtbx.format.Format], Dict) -> dxtbx.imageset.ImageSet
+def _create_imageset(
+    records: Iterable[ImageMetadataRecord],
+    format_class: Type[dxtbx.format.Format],
+    format_kwargs: Dict = None,
+) -> dxtbx.imageset.ImageSet:
     """
     Create an ImageSet object from a set of single-image records.
 
