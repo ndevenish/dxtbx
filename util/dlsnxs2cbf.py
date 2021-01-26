@@ -60,7 +60,7 @@ def compute_cbf_header(f, nn=0):
 
     result = []
 
-    D = get_distance_in_mm(f)
+    D = float(get_distance_in_mm(f))
     instrument = f["/entry/instrument"]
     name = instrument.attrs.get("short_name", "")
     T = instrument["detector/count_time"][()]
@@ -73,8 +73,8 @@ def compute_cbf_header(f, nn=0):
     timestamp = f["/entry/start_time"][()].decode()[:19]
     omega = f["/entry/sample/transformations/omega"][()]
     omega_increment = f["/entry/sample/transformations/omega_increment_set"][()]
-    chi = f["/entry/sample/transformations/chi"][()]
-    phi = f["/entry/sample/transformations/phi"][()]
+    chi = float(f["/entry/sample/transformations/chi"][()])
+    phi = float(f["/entry/sample/transformations/phi"][()])
 
     if "/entry/instrument/detector/beam_centre_x" in f:
         Bx = instrument["detector/beam_centre_x"][()]
@@ -106,7 +106,7 @@ _array_data.header_contents
     result.append("# Excluded_pixels: badpix_mask.tif")
     result.append("# Flat_field: (nil)")
     result.append(f"# Wavelength {L:.5f} A")
-    result.append(f"# Detector_distance {D / 1000.0:.5f} m")
+    result.append(f"# Detector_distance {float(D / 1000.0):.5f} m")
     result.append(f"# Beam_xy ({Bx:.2f}, {By:.2f}) pixels")
     result.append("# Flux 0.000000")
     result.append(f"# Filter_transmission {A:.3f}")

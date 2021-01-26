@@ -5,17 +5,12 @@ of image formats.
 """
 
 
+from typing import Callable, Dict, List, Optional, Tuple, Type
+
 import pkg_resources
 from six.moves.urllib_parse import urlparse
 
-try:
-    import typing
-    from typing import Callable, Dict, List, Maybe, Tuple, Type
-
-    if typing.TYPE_CHECKING:
-        from dxtbx.format.Format import Format
-except ImportError:
-    pass
+from dxtbx.format.Format import Format
 
 
 def get_format_class_for(format_class_name: str) -> Type[Format]:
@@ -73,7 +68,7 @@ _format_dag: Dict[str, List[str]] = get_format_class_dag()
 
 def get_format_class_for_file(
     image_file: str, format_hint: str = None
-) -> Maybe[Type[Format]]:
+) -> Optional[Type[Format]]:
     """Find the best format handler in the registry for given image file
     :param image_file: A string containing the file path to an image
     :param format_hint: An optional string of a format class name that should

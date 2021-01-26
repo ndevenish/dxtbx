@@ -494,7 +494,7 @@ class ImageMetadataRecord:
 
     def merge_metadata_from(
         self,
-        other_record: ImageMetadataRecord,
+        other_record: "ImageMetadataRecord",
         compare_beam: Callable = operator.__eq__,
         compare_detector: Callable = operator.__eq__,
         compare_goniometer: Callable = operator.__eq__,
@@ -799,7 +799,7 @@ def _create_imagesequence(
 
 def _groupby_template_is_none(
     records: Iterable[ImageMetadataRecord],
-) -> Generator[List[ImageMetadataRecord]]:
+) -> Generator[List[ImageMetadataRecord], None, None]:
     """Specialization of groupby that groups records by format=None"""
     for _, group in itertools.groupby(
         enumerate(records), key=lambda x: -1 if x[1].template is None else x[0]
@@ -809,9 +809,9 @@ def _groupby_template_is_none(
 
 def _convert_to_imagesets(
     records: Iterable[ImageMetadataRecord],
-    format_class: Type[dxtbx.format.Format],
+    format_class: Type[Format],
     format_kwargs: Dict = None,
-) -> Generator[dxtbx.imageset.ImageSet]:
+) -> Generator[dxtbx.imageset.ImageSet, None, None]:
     """
     Convert records into imagesets.
 
@@ -846,7 +846,7 @@ def _convert_to_imagesets(
 
 def _create_imageset(
     records: Iterable[ImageMetadataRecord],
-    format_class: Type[dxtbx.format.Format],
+    format_class: Type[Format],
     format_kwargs: Dict = None,
 ) -> dxtbx.imageset.ImageSet:
     """
