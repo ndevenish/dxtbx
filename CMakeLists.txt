@@ -49,7 +49,7 @@ find_package(CCTBX COMPONENTS cctbx scitbx REQUIRED)
 
 #   include_directories(${Python_INCLUDE_DIRS} ${Python_NumPy_INCLUDE_DIRS})
 
-  # Name targets for python without version suffixes for CMake version tolerance
+  # Name targets for python without version suffixes for Python version tolerance
   if(NOT TARGET Boost::python )
     message("Adding Boost::python target")
     add_library(Boost::python INTERFACE IMPORTED)
@@ -106,12 +106,11 @@ find_package(CCTBX COMPONENTS cctbx scitbx REQUIRED)
 # message("      Boost-python  at: ${Boost_PYTHON${PYTHON_BOOST_SUFFIX}_LIBRARY}")
 # message("      Boost-numpy   at: ${Boost_NUMPY${PYTHON_BOOST_SUFFIX}_LIBRARY}")
 
-#find_package(msgpack REQUIRED)
-# find_package(TIFF REQUIRED)
+# find_package(msgpack REQUIRED)
+find_package(TIFF REQUIRED)
 # find_package(Eigen3 REQUIRED)
 # find_package(OpenGL)
 # find_package(PNG)
-find_package(pybind11 REQUIRED)
 # find_package(msgpack REQUIRED)
 
 find_package(HDF5 REQUIRED COMPONENTS C)
@@ -155,22 +154,22 @@ function(add_python_library name)
   # add_library(${name} MODULE ${ARGN})
   Python_add_library(${name} ${ARGN})
 
-  # Tie to current project if we've set one
-  if (NOT ${PROJECT_NAME} MATCHES "^Project$")
-    # Add to a project meta-target
-    if(NOT TARGET ${PROJECT_NAME}_meta)
-      add_custom_target(${PROJECT_NAME}_meta)
-      set_target_properties (${PROJECT_NAME}_meta PROPERTIES FOLDER meta)
-    endif()
-    add_dependencies(${PROJECT_NAME}_meta ${name})
+#   # Tie to current project if we've set one
+#   if (NOT ${PROJECT_NAME} MATCHES "^Project$")
+#     # Add to a project meta-target
+#     if(NOT TARGET ${PROJECT_NAME}_meta)
+#       add_custom_target(${PROJECT_NAME}_meta)
+#       set_target_properties (${PROJECT_NAME}_meta PROPERTIES FOLDER meta)
+#     endif()
+#     add_dependencies(${PROJECT_NAME}_meta ${name})
 
-    # If the project name is also a target, then add it as a dependency
-    if (TARGET ${PROJECT_NAME})
-      target_link_libraries(${name} PRIVATE ${PROJECT_NAME})
-    endif()
+#     # If the project name is also a target, then add it as a dependency
+#     if (TARGET ${PROJECT_NAME})
+#       target_link_libraries(${name} PRIVATE ${PROJECT_NAME})
+#     endif()
 
-    set_project_relative_folder(${name})
-  endif()
+#     set_project_relative_folder(${name})
+#   endif()
 
   target_link_libraries(${name} PUBLIC Boost::python )
   # set_target_properties(${name} PROPERTIES PREFIX "")
@@ -199,51 +198,52 @@ endfunction()
 #include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/cctbx_project ${CMAKE_BINARY_DIR}/include)
 # set(CMAKE_MACOSX_RPATH OFF)
 
-find_library(CCTBX_LIB cctbx REQUIRED)
-add_library(cctbx SHARED IMPORTED)
-set_target_properties(cctbx PROPERTIES
-  IMPORTED_LOCATION      "${CCTBX_LIB}"
-  IMPORTED_NO_SONAME TRUE )
-message(STATUS "Found cctbx: ${CCTBX_LIB}")
+# find_library(CCTBX_LIB cctbx REQUIRED)
+# add_library(cctbx SHARED IMPORTED)
+# set_target_properties(cctbx PROPERTIES
+#   IMPORTED_LOCATION      "${CCTBX_LIB}"
+#   IMPORTED_NO_SONAME TRUE )
+# message(STATUS "Found cctbx: ${CCTBX_LIB}")
 
-find_library(SCITBX_BOOST_PYTHON_LIB scitbx_boost_python REQUIRED)
-add_library(scitbx_boost_python SHARED IMPORTED)
-set_target_properties(scitbx_boost_python PROPERTIES
-    IMPORTED_LOCATION      "${SCITBX_BOOST_PYTHON_LIB}" )
-message(STATUS "Found scitbx_boost_python: ${SCITBX_BOOST_PYTHON_LIB}")
+# find_library(SCITBX_BOOST_PYTHON_LIB scitbx_boost_python REQUIRED)
+# add_library(scitbx_boost_python SHARED IMPORTED)
+# set_target_properties(scitbx_boost_python PROPERTIES
+#     IMPORTED_LOCATION      "${SCITBX_BOOST_PYTHON_LIB}" )
+# message(STATUS "Found scitbx_boost_python: ${SCITBX_BOOST_PYTHON_LIB}")
 
 include_directories(
-  /scratch/mep23677/dist/build/include
-  /scratch/mep23677/dist/modules/cctbx_project
+#   /scratch/mep23677/dist/build/include
+#   /scratch/mep23677/dist/modules/cctbx_project
   /scratch/mep23677/dist/modules/cbflib/include
 )
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY  "${CMAKE_BINARY_DIR}/lib")
 
 #set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-include(TBXDistribution)
+# include(TBXDistribution)
 
-add_tbx_module( dxtbx INTERFACE )
-target_include_directories( dxtbx INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/.. )
+# add_tbx_module( dxtbx INTERFACE )
+# target_include_directories( dxtbx INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/.. )
 
-add_libtbx_refresh_command( ${CMAKE_CURRENT_SOURCE_DIR}/libtbx_refresh.py )
+# add_libtbx_refresh_command( ${CMAKE_CURRENT_SOURCE_DIR}/libtbx_refresh.py )
 
-add_python_library( dxtbx_ext
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+Python_add_library( dxtbx_ext
     boost_python/to_ewald_sphere_helpers.cc
     boost_python/ext.cpp
     boost_python/compression.cc )
-target_link_libraries( dxtbx_ext PUBLIC cctbx scitbx_boost_python TIFF::TIFF cbf )
+target_link_libraries( dxtbx_ext PUBLIC CCTBX::cctbx CCTBX::scitbx::boost_python TIFF::TIFF cbf )
 
-add_python_library( dxtbx_format_nexus_ext format/boost_python/nexus_ext.cc )
-target_link_libraries( dxtbx_format_nexus_ext PUBLIC hdf5::hdf5 scitbx_boost_python TIFF::TIFF cctbx cbf )
+Python_add_library( dxtbx_format_nexus_ext format/boost_python/nexus_ext.cc )
+target_link_libraries( dxtbx_format_nexus_ext PUBLIC hdf5::hdf5 TIFF::TIFF CCTBX::cctbx CCTBX::scitbx::boost_python Boost::python cbf )
 
-add_python_library( dxtbx_imageset_ext boost_python/imageset_ext.cc )
-target_link_libraries( dxtbx_imageset_ext PUBLIC hdf5::hdf5 scitbx_boost_python TIFF::TIFF cctbx cbf )
+Python_add_library( dxtbx_imageset_ext boost_python/imageset_ext.cc )
+target_link_libraries( dxtbx_imageset_ext PUBLIC hdf5::hdf5 TIFF::TIFF CCTBX::cctbx CCTBX::scitbx::boost_python Boost::python cbf )
 
 add_python_library( dxtbx_format_image_ext
     format/boost_python/image_ext.cc
     format/boost_python/cbf_read_buffer.cpp )
-target_link_libraries( dxtbx_format_image_ext PUBLIC hdf5::hdf5 scitbx_boost_python TIFF::TIFF cctbx cbf )
+target_link_libraries( dxtbx_format_image_ext PUBLIC hdf5::hdf5 TIFF::TIFF CCTBX::cctbx CCTBX::scitbx::boost_python Boost::python cbf )
 
 add_python_library( dxtbx_model_ext
     model/boost_python/beam.cc
@@ -261,12 +261,13 @@ add_python_library( dxtbx_model_ext
     model/boost_python/experiment.cc
     model/boost_python/experiment_list.cc
     model/boost_python/model_ext.cc )
-target_link_libraries( dxtbx_model_ext PUBLIC cctbx scitbx_boost_python TIFF::TIFF cbf )
-
-pybind11_add_module(dxtbx_flumpy boost_python/flumpy.cc)
-target_link_libraries(dxtbx_flumpy PUBLIC Boost::python)
-target_compile_options(dxtbx_flumpy PRIVATE -fvisibility=hidden)
-
+target_link_libraries( dxtbx_model_ext PUBLIC CCTBX::cctbx CCTBX::scitbx::boost_python TIFF::TIFF Boost::python cbf )
 
 add_python_library( dxtbx_masking_ext masking/boost_python/ext.cc )
-target_link_libraries( dxtbx_masking_ext PUBLIC cctbx scitbx_boost_python TIFF::TIFF)
+target_link_libraries( dxtbx_masking_ext PUBLIC CCTBX::cctbx CCTBX::scitbx::boost_python Boost::python TIFF::TIFF)
+
+# find_package(pybind11 REQUIRED)
+
+# pybind11_add_module(dxtbx_flumpy boost_python/flumpy.cc)
+# target_link_libraries(dxtbx_flumpy PUBLIC Boost::python)
+# target_compile_options(dxtbx_flumpy PRIVATE -fvisibility=hidden)

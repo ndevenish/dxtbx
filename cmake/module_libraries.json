@@ -9,7 +9,7 @@
   "omptbx": { "base": "omptbx" },
   "rstbx": { "base": "rstbx" },
   "scitbx": {
-    "base": "scitbx_boost_python",
+    "boost_python": "scitbx_boost_python",
     "minpack": "scitbx_minpack",
     "slatec": "scitbx_slatec"
   },
