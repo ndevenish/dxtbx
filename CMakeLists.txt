@@ -25,7 +25,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Add python interpreter as an imported executable
 find_package(Python REQUIRED COMPONENTS Interpreter Development)
 find_package(CCTBX COMPONENTS cctbx scitbx REQUIRED)
-find_package(CBFlib REQUIRED)
+find_package(CBFlib)
+
+if(TARGET CBFlib::cbf)
+    target_compile_definitions(CBFlib::cbf BUILD_CBF)
+endif()
 
 # Find the boost::python library for this version of python
 find_package(Boost COMPONENTS "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}" REQUIRED)
@@ -226,8 +230,13 @@ target_link_libraries( dxtbx_imageset_ext PUBLIC CCTBX::scitbx )
 
 add_python_library( dxtbx_format_image_ext
     format/boost_python/image_ext.cc
-    format/boost_python/cbf_read_buffer.cpp )
-target_link_libraries( dxtbx_format_image_ext PUBLIC CCTBX::scitbx CBFlib::cbf)
+    $<$<TARGET_EXISTS:CBFlib::cbf>:format/boost_python/cbf_read_buffer.cpp>
+)
+target_link_libraries( dxtbx_format_image_ext
+    PUBLIC
+    CCTBX::scitbx
+    $<TARGET_NAME_IF_EXISTS:CBFlib::cbf>
+)
 # hdf5::hdf5 TIFF::TIFF CCTBX::cctbx CCTBX::scitbx::boost_python Boost::python 
 
 add_python_library( dxtbx_model_ext
