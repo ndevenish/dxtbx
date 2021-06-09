@@ -1,11 +1,4 @@
-# Possibly useful parameters to pass to CMake:
-#   CMAKE_PREFIX_PATH   The root to search for libraries
-#   PYTHON_EXECUTABLE=  The Python executable to use
-#   EIGEN_ROOT=         The path to the eigen sources
-#   BOOST_ROOT=         The path to Boost
-#   HDF5_ROOT=          The path to the HDF5 install
-
-cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 
 cmake_policy(SET CMP0074 NEW) # Searching _ROOT paths by default
 cmake_policy(SET CMP0094 NEW) # Finds first active python version rather than highest
@@ -14,11 +7,8 @@ project(dxtbx)
 
 # Add the included modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
-# include(LibTBXRefresher)
-
-# option(BUILD_PYTHON_LIBS "Build the python shared libraries"    ON)
-option(BUILD_SHARED_LIBS "Build libraries as shared libraries"  ON)
-option(USE_OPENMP        "Use OpenMP"                           OFF)
+# option(BUILD_SHARED_LIBS "Build libraries as shared libraries"  ON)
+# option(USE_OPENMP        "Use OpenMP"                           OFF)
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 11)
@@ -34,28 +24,19 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Add python interpreter as an imported executable
 find_package(Python REQUIRED COMPONENTS Interpreter Development)
-
 find_package(CCTBX COMPONENTS cctbx scitbx REQUIRED)
+find_package(CBFlib REQUIRED)
 
-#   # the RPATH to be used when installing, but only if it's not a system directory
-#   list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
-#   if("${isSystemDir}" STREQUAL "-1")
-#       set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-#   endif("${isSystemDir}" STREQUAL "-1")
-# set(BOOST_PYTHON "Boost:: )
+# Find the boost::python library for this version of python
+find_package(Boost COMPONENTS "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}" REQUIRED)
 
-  # Find boost python libraries
-  find_package(Boost COMPONENTS "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}" REQUIRED)
-
-#   include_directories(${Python_INCLUDE_DIRS} ${Python_NumPy_INCLUDE_DIRS})
-
-  # Name targets for python without version suffixes for Python version tolerance
-  if(NOT TARGET Boost::python )
+# Create Boost::python alias so we don't need to carry the python version around
+if(NOT TARGET Boost::python )
     message("Adding Boost::python target")
     add_library(Boost::python INTERFACE IMPORTED)
     set_target_properties(Boost::python PROPERTIES
-      INTERFACE_LINK_LIBRARIES  "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}" )
-  endif()
+        INTERFACE_LINK_LIBRARIES  "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}" )
+endif()
 
   # Because of link differences between linux and macOS - namely that by
   # default macOS wants to resolve all symbols at link-time instead of
@@ -218,7 +199,7 @@ include_directories(
 )
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY  "${CMAKE_BINARY_DIR}/lib")
 
-#set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE OFF)
 
 # include(TBXDistribution)
 
@@ -232,18 +213,22 @@ Python_add_library( dxtbx_ext
     boost_python/to_ewald_sphere_helpers.cc
     boost_python/ext.cpp
     boost_python/compression.cc )
-target_link_libraries( dxtbx_ext PUBLIC CCTBX::cctbx CCTBX::scitbx::boost_python TIFF::TIFF cbf )
+target_link_libraries(dxtbx_ext PUBLIC CCTBX::scitbx)
+# target_link_libraries( dxtbx_ext PUBLIC CCTBX::cctbx CCTBX::scitbx::boost_python TIFF::TIFF )
 
 Python_add_library( dxtbx_format_nexus_ext format/boost_python/nexus_ext.cc )
-target_link_libraries( dxtbx_format_nexus_ext PUBLIC hdf5::hdf5 TIFF::TIFF CCTBX::cctbx CCTBX::scitbx::boost_python Boost::python cbf )
+target_link_libraries( dxtbx_format_nexus_ext PUBLIC hdf5::hdf5 CCTBX::scitbx )
+# TIFF::TIFF CCTBX::cctbx CCTBX::scitbx::boost_python Boost::python 
 
 Python_add_library( dxtbx_imageset_ext boost_python/imageset_ext.cc )
-target_link_libraries( dxtbx_imageset_ext PUBLIC hdf5::hdf5 TIFF::TIFF CCTBX::cctbx CCTBX::scitbx::boost_python Boost::python cbf )
+target_link_libraries( dxtbx_imageset_ext PUBLIC CCTBX::scitbx )
+# hdf5::hdf5 TIFF::TIFF CCTBX::cctbx CCTBX::scitbx::boost_python Boost::python 
 
 add_python_library( dxtbx_format_image_ext
     format/boost_python/image_ext.cc
     format/boost_python/cbf_read_buffer.cpp )
-target_link_libraries( dxtbx_format_image_ext PUBLIC hdf5::hdf5 TIFF::TIFF CCTBX::cctbx CCTBX::scitbx::boost_python Boost::python cbf )
+target_link_libraries( dxtbx_format_image_ext PUBLIC CCTBX::scitbx CBFlib::cbf)
+# hdf5::hdf5 TIFF::TIFF CCTBX::cctbx CCTBX::scitbx::boost_python Boost::python 
 
 add_python_library( dxtbx_model_ext
     model/boost_python/beam.cc
@@ -261,10 +246,12 @@ add_python_library( dxtbx_model_ext
     model/boost_python/experiment.cc
     model/boost_python/experiment_list.cc
     model/boost_python/model_ext.cc )
-target_link_libraries( dxtbx_model_ext PUBLIC CCTBX::cctbx CCTBX::scitbx::boost_python TIFF::TIFF Boost::python cbf )
+target_link_libraries( dxtbx_model_ext PUBLIC CCTBX::scitbx)
+# CCTBX::cctbx CCTBX::scitbx::boost_python TIFF::TIFF Boost::python
 
 add_python_library( dxtbx_masking_ext masking/boost_python/ext.cc )
-target_link_libraries( dxtbx_masking_ext PUBLIC CCTBX::cctbx CCTBX::scitbx::boost_python Boost::python TIFF::TIFF)
+target_link_libraries( dxtbx_masking_ext PUBLIC CCTBX::scitbx)
+#  CCTBX::cctbx CCTBX::scitbx::boost_python Boost::python TIFF::TIFF
 
 # find_package(pybind11 REQUIRED)
 
