@@ -1,0 +1,197 @@
+import ast
+import importlib
+import itertools
+import json
+import os
+import pkgutil
+import re
+import subprocess
+from pathlib import Path
+from pprint import pprint
+from typing import List
+
+from setuptools import find_packages, setup
+
+# # Get the version from git, for now
+# # DIALS_VERSION = subprocess.check_output(["git", "describe"], cwd="dials").decode("utf-8").strip()
+# dials_tag = (
+#     subprocess.check_output(["git", "describe", "--abbrev=0"], cwd="dials")
+#     .decode("utf-8")
+#     .strip()
+# )
+# dials_count = (
+#     subprocess.check_output(
+#         ["git", "rev-list", f"{dials_tag}..", "--count"], cwd="dials"
+#     )
+#     .decode("utf-8")
+#     .strip()
+# )
+
+# assert dials_tag == "v3.dev"
+# DIALS_VERSION = f"3.1.dev{dials_count}"
+
+# assert "LIBTBX_BUILD" in os.environ, "Need build to find modules list"
+# with open(os.path.join(os.environ["LIBTBX_BUILD"], "libtbx_env.json")) as f:
+#     env = json.load(f)
+# assert env
+
+# Generate a list of console scripts
+
+
+def get_entry_point(filename: Path, prefix: str, import_path: str) -> List[str]:
+    """Returns the entry point string for a given path.
+
+    Args:
+        filename:
+            The python file to parse. Will look for a run() function
+            and any number of LIBTBX_SET_DISPATCHER_NAME.
+        prefix: The prefix to output the entry point console script with
+        import_path: The import path to get to the package the file is in
+
+    Returns:
+        A list of entry_point specifications
+    """
+    contents = filename.read_text()
+    tree = ast.parse(contents)
+    # Find root functions named "run"
+    has_run = any(
+        x for x in tree.body if isinstance(x, ast.FunctionDef) and x.name == "run"
+    )
+    if not has_run:
+        return []
+    # Find if we need an alternate name via LIBTBX_SET_DISPATCHER_NAME
+    alternate_names = re.findall(
+        r"^#\s*LIBTBX_SET_DISPATCHER_NAME\s+(.*)$", contents, re.M
+    )
+    if alternate_names:
+        return [f"{name}={import_path}.{filename.stem}:run" for name in alternate_names]
+
+    return [f"{prefix}.{filename.stem}={import_path}.{filename.stem}:run"]
+
+
+def enumerate_format_classes(path: Path) -> List[str]:
+    format_classes = []
+    for filename in path.glob("Format*.py"):
+        # try:
+        #     # fid, pathname, desc = imp.find_module(name, dxtbx.format.__path__)
+        #     importlib.util.find_spec(name)
+        # except Exception:
+        #     fid = None
+        # if not fid:
+        #     print("  *** Could not read %s" % name)
+        #     continue
+        # if desc[0] == ".pyc":
+        #     print("  *** %s only present in compiled form, ignoring" % name)
+        #     continue
+        content = filename.read_bytes()
+        try:
+            parsetree = ast.parse(content)
+        except SyntaxError:
+            print(f"  *** Could not parse {filename.name}")
+            continue
+        for top_level_def in parsetree.body:
+            if not isinstance(top_level_def, ast.ClassDef):
+                continue
+            base_names = [
+                baseclass.id
+                for baseclass in top_level_def.bases
+                if isinstance(baseclass, ast.Name) and baseclass.id.startswith("Format")
+            ]
+            if base_names:
+                classname = top_level_def.name
+                format_classes.append(
+                    f"{classname}:{','.join(base_names)} = dxtbx.format.{filename.stem}:{classname}"
+                )
+                print("  found", classname, " based on ", str(base_names))
+    return format_classes
+
+
+package_path = Path(__file__).parent / "dxtbx"
+# console_scripts =
+entry_points = {
+    "console_scripts": sorted(
+        itertools.chain(
+            *[
+                get_entry_point(f, "dxtbx", "dxtbx.command_line")
+                for f in (package_path / "command_line").glob("*.py")
+            ]
+        )
+    ),
+    "dxtbx.format": sorted(enumerate_format_classes(package_path / "format")),
+}
+
+# modules_entry_points = {
+#     "libtbx.module": [f"{module} = {module}" for module in env.keys()],
+#     "dxtbx.profile_model": [
+#         "gaussian_rs = dials.extensions.gaussian_rs_profile_model_ext:GaussianRSProfileModelExt"
+#     ],
+#     "dxtbx.scaling_model_ext": [
+#         "physical = dials.algorithms.scaling.model.model:PhysicalScalingModel",
+#         "KB = dials.algorithms.scaling.model.model:KBScalingModel",
+#         "array = dials.algorithms.scaling.model.model:ArrayScalingModel",
+#         "dose_decay = dials.algorithms.scaling.model.model:DoseDecay",
+#     ],
+#     "dials.index.basis_vector_search": [
+#         "fft1d = dials.algorithms.indexing.basis_vector_search:FFT1D",
+#         "fft3d = dials.algorithms.indexing.basis_vector_search:FFT3D",
+#         "real_space_grid_search = dials.algorithms.indexing.basis_vector_search:RealSpaceGridSearch",
+#     ],
+#     "dials.index.lattice_search": [
+#         "low_res_spot_match = dials.algorithms.indexing.lattice_search:LowResSpotMatch"
+#     ],
+#     "dials.integration.background": [
+#         "Auto = dials.extensions.auto_background_ext:AutoBackgroundExt",
+#         "glm = dials.extensions.glm_background_ext:GLMBackgroundExt",
+#         "gmodel = dials.extensions.gmodel_background_ext:GModelBackgroundExt",
+#         "simple = dials.extensions.simple_background_ext:SimpleBackgroundExt",
+#         "null = dials.extensions.null_background_ext:NullBackgroundExt",
+#         "median = dials.extensions.median_background_ext:MedianBackgroundExt",
+#     ],
+#     "dials.integration.centroid": [
+#         "simple = dials.extensions.simple_centroid_ext:SimpleCentroidExt"
+#     ],
+#     "dials.spotfinder.threshold": [
+#         "dispersion = dials.extensions.dispersion_spotfinder_threshold_ext:DispersionSpotFinderThresholdExt",
+#         "dispersion_extended = dials.extensions.dispersion_extended_spotfinder_threshold_ext:DispersionExtendedSpotFinderThresholdExt",
+#     ],
+#     "console_scripts": [console_scripts],
+# }
+
+
+print("Entry points:")
+pprint(entry_points, width=10000)
+
+setup(
+    name="dxtbx",
+    version="3.6.dev",
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "Environment :: Console",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: BSD License",
+        "Operating System :: MacOS",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: POSIX :: Linux",
+    ],
+    description="Diffraction Integration for Advanced Light Sources",
+    author="Diamond Light Source",
+    author_email="dials-support@lists.sourceforge.net",
+    url="https://github.com/cctbx/dxtbx",
+    packages=["dxtbx"],
+    # package_data={
+    #     "dxtbx.data": ["detectors.lib"],
+    #     "ccp4io.libccp4.data": ["*"],
+    #     "dials.templates": ["*.html"],
+    # },
+    # data_files=[
+    #     (
+    #         "dui/resources",
+    #         [
+    #             "src/dui/resources/DIALS_Logo_smaller_centred_grayed.png",
+    #         ],
+    #     )
+    # ],
+    # include_package_data=True,
+    # entry_points={"console_scripts": ["dui=dui.main_dui:main"]},
+    entry_points=entry_points,
+)
