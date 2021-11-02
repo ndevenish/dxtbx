@@ -7,7 +7,6 @@
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 Python_add_library( dxtbx_ext
-    boost_python/to_ewald_sphere_helpers.cc
     boost_python/ext.cpp
     boost_python/compression.cc )
 target_link_libraries(dxtbx_ext PUBLIC CCTBX::scitbx)
@@ -55,8 +54,7 @@ add_python_library( dxtbx_masking_ext masking/boost_python/ext.cc )
 target_link_libraries( dxtbx_masking_ext PUBLIC CCTBX::scitbx)
 #  CCTBX::cctbx CCTBX::scitbx::boost_python Boost::python TIFF::TIFF
 
-# find_package(pybind11 REQUIRED)
-
-# pybind11_add_module(dxtbx_flumpy boost_python/flumpy.cc)
-# target_link_libraries(dxtbx_flumpy PUBLIC Boost::python)
-# target_compile_options(dxtbx_flumpy PRIVATE -fvisibility=hidden)
+find_package(pybind11)
+pybind11_add_module(dxtbx_flumpy boost_python/flumpy.cc)
+target_link_libraries(dxtbx_flumpy PUBLIC Boost::python CCTBX::scitbx)
+target_compile_options(dxtbx_flumpy PRIVATE -fvisibility=hidden)
