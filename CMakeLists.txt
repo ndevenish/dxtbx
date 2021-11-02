@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 
-cmake_policy(SET CMP0074 NEW) # Searching _ROOT paths by default
-cmake_policy(SET CMP0094 NEW) # Finds first active python version rather than highest
+# cmake_policy(SET CMP0074 NEW) # Searching _ROOT paths by default
+# cmake_policy(SET CMP0094 NEW) # Finds first active python version rather than highest
 
 project(dxtbx)
 
@@ -25,11 +25,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Add python interpreter as an imported executable
 find_package(Python REQUIRED COMPONENTS Interpreter Development)
 find_package(CCTBX COMPONENTS cctbx scitbx REQUIRED)
-find_package(CBFlib)
-
-if(TARGET CBFlib::cbf)
-    target_compile_definitions(CBFlib::cbf BUILD_CBF)
-endif()
 
 # Find the boost::python library for this version of python
 find_package(Boost COMPONENTS "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}" REQUIRED)
@@ -100,7 +95,7 @@ find_package(TIFF REQUIRED)
 
 find_package(HDF5 REQUIRED COMPONENTS C)
 
-if (${USE_OPENMP})
+if (USE_OPENMP)
   # If we asked for OpenMP, then we'd better have it
   find_package(OpenMP REQUIRED)
 endif()
