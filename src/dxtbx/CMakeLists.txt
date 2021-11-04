@@ -1,37 +1,25 @@
-# include(TBXDistribution)
-
-# add_tbx_module( dxtbx INTERFACE )
-# target_include_directories( dxtbx INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/.. )
-
-# add_libtbx_refresh_command( ${CMAKE_CURRENT_SOURCE_DIR}/libtbx_refresh.py )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+
 Python_add_library( dxtbx_ext
+    MODULE
     boost_python/ext.cpp
     boost_python/compression.cc )
 target_link_libraries(dxtbx_ext PUBLIC CCTBX::scitbx)
-# target_link_libraries( dxtbx_ext PUBLIC CCTBX::cctbx CCTBX::scitbx::boost_python TIFF::TIFF )
 
-Python_add_library( dxtbx_format_nexus_ext format/boost_python/nexus_ext.cc )
+Python_add_library( dxtbx_format_nexus_ext
+    MODULE
+    format/boost_python/nexus_ext.cc )
 target_link_libraries( dxtbx_format_nexus_ext PUBLIC hdf5::hdf5 CCTBX::scitbx )
-# TIFF::TIFF CCTBX::cctbx CCTBX::scitbx::boost_python Boost::python 
 
-Python_add_library( dxtbx_imageset_ext boost_python/imageset_ext.cc )
+Python_add_library( dxtbx_imageset_ext MODULE boost_python/imageset_ext.cc )
 target_link_libraries( dxtbx_imageset_ext PUBLIC CCTBX::scitbx )
-# hdf5::hdf5 TIFF::TIFF CCTBX::cctbx CCTBX::scitbx::boost_python Boost::python 
 
-add_python_library( dxtbx_format_image_ext
-    format/boost_python/image_ext.cc
-    $<$<TARGET_EXISTS:CBFlib::cbf>:format/boost_python/cbf_read_buffer.cpp>
-)
-target_link_libraries( dxtbx_format_image_ext
-    PUBLIC
-    CCTBX::scitbx
-    $<TARGET_NAME_IF_EXISTS:CBFlib::cbf>
-)
-# hdf5::hdf5 TIFF::TIFF CCTBX::cctbx CCTBX::scitbx::boost_python Boost::python 
+Python_add_library( dxtbx_format_image_ext MODULE format/boost_python/image_ext.cc )
+target_link_libraries( dxtbx_format_image_ext PUBLIC CCTBX::scitbx )
 
-add_python_library( dxtbx_model_ext
+Python_add_library( dxtbx_model_ext
+    MODULE
     model/boost_python/beam.cc
     model/boost_python/spectrum.cc
     model/boost_python/goniometer.cc
@@ -48,13 +36,24 @@ add_python_library( dxtbx_model_ext
     model/boost_python/experiment_list.cc
     model/boost_python/model_ext.cc )
 target_link_libraries( dxtbx_model_ext PUBLIC CCTBX::scitbx)
-# CCTBX::cctbx CCTBX::scitbx::boost_python TIFF::TIFF Boost::python
 
-add_python_library( dxtbx_masking_ext masking/boost_python/ext.cc )
+Python_add_library( dxtbx_masking_ext
+    MODULE
+    masking/boost_python/ext.cc )
 target_link_libraries( dxtbx_masking_ext PUBLIC CCTBX::scitbx)
-#  CCTBX::cctbx CCTBX::scitbx::boost_python Boost::python TIFF::TIFF
 
-find_package(pybind11)
 pybind11_add_module(dxtbx_flumpy boost_python/flumpy.cc)
 target_link_libraries(dxtbx_flumpy PUBLIC Boost::python CCTBX::scitbx)
 target_compile_options(dxtbx_flumpy PRIVATE -fvisibility=hidden)
+
+install(
+    TARGETS
+        dxtbx_ext
+        dxtbx_format_nexus_ext
+        dxtbx_imageset_ext
+        dxtbx_format_image_ext
+        dxtbx_model_ext
+        dxtbx_masking_ext
+        dxtbx_flumpy
+    DESTINATION "${Python_SITEARCH}"
+    )
