@@ -1,22 +1,23 @@
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+link_libraries(CCTBX::scitbx Boost::python)
 
 Python_add_library( dxtbx_ext
     MODULE
     boost_python/ext.cpp
     boost_python/compression.cc )
-target_link_libraries(dxtbx_ext PUBLIC CCTBX::scitbx)
+# target_link_libraries(dxtbx_ext PUBLIC CCTBX::scitbx)
 
 Python_add_library( dxtbx_format_nexus_ext
     MODULE
     format/boost_python/nexus_ext.cc )
-target_link_libraries( dxtbx_format_nexus_ext PUBLIC hdf5::hdf5 CCTBX::scitbx )
+target_link_libraries( dxtbx_format_nexus_ext PRIVATE hdf5::hdf5 )
 
 Python_add_library( dxtbx_imageset_ext MODULE boost_python/imageset_ext.cc )
-target_link_libraries( dxtbx_imageset_ext PUBLIC CCTBX::scitbx )
+# target_link_libraries( dxtbx_imageset_ext PUBLIC CCTBX::scitbx )
 
 Python_add_library( dxtbx_format_image_ext MODULE format/boost_python/image_ext.cc )
-target_link_libraries( dxtbx_format_image_ext PUBLIC CCTBX::scitbx )
+# target_link_libraries( dxtbx_format_image_ext PUBLIC CCTBX::scitbx )
 
 Python_add_library( dxtbx_model_ext
     MODULE
@@ -35,15 +36,15 @@ Python_add_library( dxtbx_model_ext
     model/boost_python/experiment.cc
     model/boost_python/experiment_list.cc
     model/boost_python/model_ext.cc )
-target_link_libraries( dxtbx_model_ext PUBLIC CCTBX::scitbx)
+# target_link_libraries( dxtbx_model_ext PUBLIC CCTBX::scitbx)
 
 Python_add_library( dxtbx_masking_ext
     MODULE
     masking/boost_python/ext.cc )
-target_link_libraries( dxtbx_masking_ext PUBLIC CCTBX::scitbx)
+# target_link_libraries( dxtbx_masking_ext PUBLIC CCTBX::scitbx)
 
 pybind11_add_module(dxtbx_flumpy boost_python/flumpy.cc)
-target_link_libraries(dxtbx_flumpy PUBLIC Boost::python CCTBX::scitbx)
+# target_link_libraries(dxtbx_flumpy PUBLIC Boost::python CCTBX::scitbx)
 target_compile_options(dxtbx_flumpy PRIVATE -fvisibility=hidden)
 
 install(
@@ -56,4 +57,4 @@ install(
         dxtbx_masking_ext
         dxtbx_flumpy
     DESTINATION "${Python_SITEARCH}"
-    )
+)
