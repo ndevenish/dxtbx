@@ -27,20 +27,7 @@ if(NOT TARGET Boost::python )
         INTERFACE_LINK_LIBRARIES  "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}" )
 endif()
 
-# If the compiler supports the flag, disable multichar warnings (used in boost::mpl::string)
-# include(CheckCXXCompilerFlag)
-# check_cxx_compiler_flag("-Wno-multichar" MULTICHAR_FLAG)
-# if(MULTICHAR_FLAG)
-#   add_compile_options("-Wno-multichar")
-# endif()
-
-# Convenience function for setting up python shared libraries
-function(add_dxtbx_python_module name)
-  Python_add_library(${name} MODULE ${ARGN})
-  target_link_libraries(${name} PRIVATE Boost::python CCTBX::scitbx )
-  install(TARGETS ${name} DESTINATION ${Python_SITEARCH})
-endfunction()
-
+# Put the libraries into lib/ so that we can run this in-place in a TBX install
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY  "${CMAKE_BINARY_DIR}/lib")
 
 add_subdirectory(src/dxtbx)
