@@ -2,46 +2,36 @@
 
 #.rst:
 # FindCCTBX
-# ---------------
-# Find an existing CCTBX distribution
+# ---------
 #
+# Find an existing CCTBX distribution and sets up targets for using it
 #
-# ::
-#   find_libtbx_module(<name> [REQUIRED])
+# The CCTBX distribution is found by, in order:
 #
-# Search the tbx-repositories for a specific named module. If the
-# ``REQUIRED`` parameter is specified, then an error is thrown if
-# the module can not be found.
+# 1. Reading the ``CCTBX_BUILD_DIR`` cache variable, if set
+# 2. Reading the ``LIBTBX_BUILD`` environment variable
+# 3. Using python to ``import libtbx``
 #
-# ::
-#   add_libtbx_module(<name> [INTERFACE] source1 [source2 ...])
+# Components
+# ^^^^^^^^^^
 #
-# Register the current directory as a libtbx module, and read the module
-# folder and sources to determine any hard/soft dependencies for the
-# module. Then, generate dispatchers for any command_line scripts.
+# Any ``COMPONENTS`` passed to ``find_package`` will cause this module
+# to look for a libtbx-distribution module of the same name. This will
+# then be exposed as the target ``CCTBX::<module_name>`` which will set
+# up the include, library paths associated with that module.
 #
-# A target with the same name as the module will be created. If the
-# ``INTERFACE`` option is specified then this will be an interface
-# target, otherwise it will be a library of the default library type (as
-# specified by :variable:`BUILD_SHARED_LIBS`).
+# Other libtbx module dependencies are not currently transitively
+# followed, so will need to be specified manually.
 #
-# If the target module is not an interface module, then sources must
-# be present.
+# Any known shared libraries for a particular tbx-module will have
+# targets added themselves. For example, cctbx builds a ``libcctbx``
+# shared library. If the cctbx component is requested, this will be made
+# available for linking with the target name ``CCTBX::cctbx::cctbx``.
+#
+# The database for recognising these shared library targets can be found
+# in ``module_libraries.json`` in the folder above this FindCCTBX module.
 
-# Temporarily remove:
-#                            [[GENERATED_FILES files...] | NO_REFRESH]
-# If there is a ``libtbx_refresh.py`` file that generates source files for
-# inclusion as part of the build, then the output files must be specified
-# as a ``GENERATED_FILES`` argument. These files are passed to the
-# ``add_libtbx_refresh_command` function. If there happens to be a
-# ``libtbx_refresh.py`` script but it does not generate files, then you can
-# pass the ``NO_REFRESH`` option to suppress the warning.
-
-# Needs components - cctbx, scitbx
-
-
-# Let's first try to find the libtbx environment location.
-
+# If python isn't already included, pull it in here
 if (NOT TARGET Python::Interpreter)
     find_package(Python COMPONENTS Interpreter REQUIRED)
 endif()
@@ -183,10 +173,6 @@ if (CCTBX_BUILD_DIR)
     endforeach()
     unset(_comp)
 endif()
-
-
-
-
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(CCTBX
