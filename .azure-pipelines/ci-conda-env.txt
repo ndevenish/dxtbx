@@ -40,3 +40,4 @@ conda-forge::six
 conda-forge::tabulate
 conda-forge::tqdm
 conda-forge::xz
+conda-forge::zlib
