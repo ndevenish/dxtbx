@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import setuptools
-
 from build import build
 
 # Static version number which is updated by bump2version
