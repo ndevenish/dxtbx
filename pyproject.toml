@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools >= 75.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 # requires = ["scikit-build-core"]
 # build-backend = "scikit_build_core.build"
 
@@ -30,8 +30,10 @@ dynamic = ["entry-points", "scripts"]
 Homepage = "https://dials.github.io"
 Repository = "https://github.com/cctbx/dxtbx"
 
-[tool.setuptools.dynamic]
-entry-points = { file = "entry_points.ini" }
+# [tool.setuptools.dynamic]
+# entry-points = { file = "entry_points.ini" }
+
+[tool.hatch.metadata.hooks.custom]
 
 # setup_kwargs = {
 #     "package_data": {
