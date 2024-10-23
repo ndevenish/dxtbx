@@ -24,7 +24,7 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
 ]
-dynamic = ["entry-points", "scripts"]
+# dynamic = ["entry-points", "scripts"]
 
 [project.urls]
 Homepage = "https://dials.github.io"
