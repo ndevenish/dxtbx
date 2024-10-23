@@ -24,16 +24,13 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
 ]
-# dynamic = ["entry-points", "scripts"]
+dynamic = ["entry-points", "scripts"]
 
 [project.urls]
 Homepage = "https://dials.github.io"
 Repository = "https://github.com/cctbx/dxtbx"
 
-# [tool.setuptools.dynamic]
-# entry-points = { file = "entry_points.ini" }
-
-[tool.hatch.metadata.hooks.custom]
+[tool.hatch.metadata.hooks.custom.entry-points]
 
 # setup_kwargs = {
 #     "package_data": {

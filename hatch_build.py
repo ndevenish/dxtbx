@@ -50,7 +50,7 @@ def get_entry_point(
             (name, f"{import_path}.{filename.stem}:run") for name in alternate_names
         ]
 
-    return [(f"{prefix}.{filename.stem}", "{import_path}.{filename.stem}:run")]
+    return [(f"{prefix}.{filename.stem}", f"{import_path}.{filename.stem}:run")]
 
 
 def enumerate_format_classes(path: Path) -> list[tuple(str, str)]:
@@ -76,7 +76,7 @@ def enumerate_format_classes(path: Path) -> list[tuple(str, str)]:
                 format_classes.append(
                     (
                         f"{classname}:{','.join(base_names)}",
-                        "dxtbx.format.{filename.stem}:{classname}",
+                        f"dxtbx.format.{filename.stem}:{classname}",
                     )
                 )
     return format_classes
@@ -85,13 +85,12 @@ def enumerate_format_classes(path: Path) -> list[tuple(str, str)]:
 class CustomMetadataHook(MetadataHookInterface):
     def update(self, metadata):
         scripts = metadata.setdefault("scripts", {})
-        package_path = Path(self.root).parent / "src" / "dxtbx"
+        package_path = Path(self.root) / "src" / "dxtbx"
         for file in package_path.joinpath("command_line").glob("*.py"):
             for name, symbol in get_entry_point(file, "dxtbx", "dxtbx.command_line"):
                 if name not in scripts:
                     scripts[name] = symbol
 
-        # [project.entry-points.plugin-namespace]
         plugins = metadata.setdefault("entry-points", {})
         formats = plugins.setdefault("dxtbx.format", {})
         for name, symbol in sorted(enumerate_format_classes(package_path / "format")):
