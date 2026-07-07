@@ -7,16 +7,19 @@ is a virtual dataset (VDS) mapping ~1000-frame blocks to external ``*_NNNNNN.h5`
 this tool:
 
   1. duplicates the master's structure into a fresh output directory -- copying all the
-     metadata verbatim and recreating the VDS + external links -- but with the underlying
-     block files created *empty* (0 frames, growable), exactly as they exist up front at
-     the start of a real collection; then
+     metadata verbatim, eagerly copying any referenced external metadata files (e.g. the
+     ``*_meta.h5`` holding detector config such as ``bit_depth_readout``, which a real
+     collection writes up front) and recreating the VDS + external links -- but with the
+     underlying block files created *empty* (0 frames, growable), exactly as they exist up
+     front at the start of a real collection; then
   2. fills those block files incrementally via SWMR, one frame at a time, closing each
      block file when it is complete -- mimicking the detector writer.
 
 The point is to have a realistic, *growing* dataset to test ``dev.dxtbx.image_availability``
 (and the ``xia2.ssx wait_for_images`` live-processing mode) against, without needing a live
-beamline. No real image data is written -- frames are zeros (compressed to almost nothing),
-so only frame *counts* grow; that is exactly what the availability tools inspect.
+beamline. By default the real frame data is copied from the template's source files (so the
+growing collection has genuine diffraction to spot-find and index); pass ``--blank`` to write
+zero frames instead (tiny and fast, when only frame *counts* matter for availability testing).
 
 The example master and its data files are only ever opened read-only and are never modified.
 
@@ -32,6 +35,8 @@ from __future__ import annotations
 import argparse
 import pathlib
 import re
+import shutil
+import signal
 import sys
 import time
 
@@ -110,13 +115,30 @@ def _new_source_filename(original: str, stem: str) -> str:
     return f"{stem}_{base}"
 
 
-def _copy_structure(src, dst, skip_paths):
+def _remap_external_filename(original: str, orig_stem: str, stem: str) -> str:
+    """Map an external metadata file onto the output stem, preserving its suffix.
+
+    e.g. ("escrima_1589_meta.h5", "escrima_1589", "sim") -> "sim_meta.h5". Filenames that
+    don't start with the original stem are prefixed with the new stem instead.
+    """
+    base = pathlib.PurePosixPath(original).name
+    if base.startswith(orig_stem):
+        return f"{stem}{base[len(orig_stem) :]}"
+    return f"{stem}_{base}"
+
+
+def _copy_structure(src, dst, skip_paths, remap_external, external_files):
     """Recursively copy groups/datasets/soft-links from src group into dst group,
     skipping any object whose full path is in skip_paths (the VDS + its sources).
 
     The skip check uses the master-side path (group + key), computed before the link is
     resolved -- important because resolving an external link yields the *target* file's
     internal name, not the path in the master.
+
+    Non-data external links (e.g. the detector metadata in ``*_meta.h5``, which holds
+    things like ``bit_depth_readout`` that dials.import reads) are rewritten onto the
+    output stem via ``remap_external`` and their original -> new filenames recorded in
+    ``external_files`` so the caller can copy those files into the output directory.
     """
     dst.attrs.update(src.attrs)
     base = src.name.rstrip("/")
@@ -127,12 +149,21 @@ def _copy_structure(src, dst, skip_paths):
         if isinstance(link, h5py.SoftLink):
             dst[key] = h5py.SoftLink(link.path)
         elif isinstance(link, h5py.ExternalLink):
-            # A non-data external link: preserve it verbatim.
-            dst[key] = h5py.ExternalLink(link.filename, link.path)
+            # A non-data external link (detector metadata etc.): point it at a copy
+            # under the output stem, and record the target so it gets copied eagerly.
+            new_filename = remap_external(link.filename)
+            external_files[link.filename] = new_filename
+            dst[key] = h5py.ExternalLink(new_filename, link.path)
         else:
             obj = src[key]
             if isinstance(obj, h5py.Group):
-                _copy_structure(obj, dst.create_group(key), skip_paths)
+                _copy_structure(
+                    obj,
+                    dst.create_group(key),
+                    skip_paths,
+                    remap_external,
+                    external_files,
+                )
             else:
                 dst.copy(obj, key)
 
@@ -173,9 +204,13 @@ def build_structure(
     no file is created beyond the last block that will actually receive data
     (frames_target), since a collection that stops early never writes those files.
     """
+    template = pathlib.Path(template)
+    template_dir = template.parent
+    orig_stem = template.stem
     out_master = out_dir / f"{stem}.nxs"
     last_block = _last_block_index(blocks, frames_target)
     outputs = []
+    external_files: dict[str, str] = {}
     with h5py.File(template, "r") as src:
         vds = _find_signal_vds(src)
         vds_path = vds.name
@@ -185,7 +220,13 @@ def build_structure(
             skip.add(f"{vds_group_path}/{b['link_name']}")
 
         with h5py.File(out_master, "w", libver="latest") as dst:
-            _copy_structure(src, dst, skip)
+            _copy_structure(
+                src,
+                dst,
+                skip,
+                lambda fn: _remap_external_filename(fn, orig_stem, stem),
+                external_files,
+            )
             group = dst[vds_group_path]
             layout = h5py.VirtualLayout(
                 shape=(int(vds.shape[0]),) + frame_shape, dtype=dtype
@@ -215,6 +256,22 @@ def build_structure(
                 outputs.append((b, out_path))
             group.create_virtual_dataset(
                 pathlib.PurePosixPath(vds_path).name, layout, fillvalue=0
+            )
+
+    # Eagerly copy referenced external metadata files (e.g. *_meta.h5). These hold static
+    # detector config (bit_depth_readout etc.) that dials.import needs, and in a real
+    # collection they are written up front, so they always exist at the start -- copy them
+    # now rather than leaving the master's external links dangling.
+    for orig_name, new_name in external_files.items():
+        src_file = pathlib.Path(orig_name)
+        if not src_file.is_absolute():
+            src_file = template_dir / orig_name
+        if src_file.is_file():
+            shutil.copyfile(src_file, out_dir / new_name)
+        else:
+            print(
+                f"Warning: external metadata file {src_file} referenced by the master "
+                f"was not found; the master's link to {new_name} will not resolve."
             )
     return out_master, outputs
 
@@ -251,13 +308,22 @@ def write_frames(
     files_ahead,
     compression,
     logger,
+    template_dir=None,
+    blank=False,
 ):
     """Fill the block files via SWMR, one frame at a time, up to total_to_write frames.
 
     The block datasets are preallocated at full extent (as a detector lays them out), so a
     frame becomes available when its chunk is written, not when the extent grows. Each
-    frame therefore writes a zero payload into ``dset[i]`` and flushes; the availability
-    tools count the allocated chunks. Use --compression none for the fastest writes.
+    frame writes one frame's payload into ``dset[i]`` and flushes; the availability tools
+    count the allocated chunks. Use --compression none for the fastest writes.
+
+    By default the real frame data is copied from the template's source block files (so the
+    simulated collection has genuine diffraction to spot-find/index). Reading those source
+    files may need an HDF5 decompression plugin (e.g. bitshuffle), which the caller ensures
+    is registered; the copied frames are re-encoded with ``compression`` (a stock filter),
+    so the output is readable without any plugin. With blank=True, all-zero frames are
+    written instead -- tiny and fast, for exercising image *availability* only.
 
     With files_ahead>0, block files are created lazily so that only that many files exist
     ahead of the writer at any time (matching a detector's rolling pre-creation).
@@ -268,43 +334,74 @@ def write_frames(
     last_block = _last_block_index((b for b, _ in outputs), total_to_write)
     written = 0
     next_t = time.monotonic()
-    for k, (b, path) in enumerate(outputs):
-        if written >= total_to_write:
-            break
-        if files_ahead:
-            # Ensure the window [k, k+files_ahead) of block files exists on disk,
-            # clamped to the last block that will actually be written.
-            for j in range(k, min(k + files_ahead, last_block + 1)):
-                bj, pj = outputs[j]
-                _ensure_block_file(
-                    pj,
-                    bj["source_dset"],
-                    bj["stop"] - bj["start"],
-                    frame_shape,
-                    dtype,
-                    compression,
-                )
-        block_len = b["stop"] - b["start"]
-        n_here = min(block_len, total_to_write - written)
-        logger(
-            f"Filling {path.name}: frames {b['start']}..{b['start'] + n_here - 1} "
-            f"({n_here} of {block_len})"
-        )
-        with h5py.File(path, "r+", libver="latest") as f:
-            f.swmr_mode = True
-            dset = f[b["source_dset"]]
-            for i in range(n_here):
-                dset[i] = zero
-                dset.flush()
-                written += 1
-                if interval:
-                    next_t += interval
-                    delay = next_t - time.monotonic()
-                    if delay > 0:
-                        time.sleep(delay)
-                    else:
-                        next_t = time.monotonic()
-        # block file closed here -> visible to the 'file_close' availability method
+
+    # Handle Ctrl-C by setting a flag rather than raising: a KeyboardInterrupt raised
+    # inside the HDF5 write/flush C calls can leave the library mid-operation, making the
+    # file slow to close (looks hung, prompting a second Ctrl-C). Deferring to a flag lets
+    # us finish the current frame, close the file cleanly, and stop after one Ctrl-C.
+    interrupted = False
+
+    def _on_sigint(signum, frame):
+        nonlocal interrupted
+        interrupted = True
+
+    previous_handler = signal.signal(signal.SIGINT, _on_sigint)
+    try:
+        for k, (b, path) in enumerate(outputs):
+            if interrupted or written >= total_to_write:
+                break
+            if files_ahead:
+                # Ensure the window [k, k+files_ahead) of block files exists on disk,
+                # clamped to the last block that will actually be written.
+                for j in range(k, min(k + files_ahead, last_block + 1)):
+                    bj, pj = outputs[j]
+                    _ensure_block_file(
+                        pj,
+                        bj["source_dset"],
+                        bj["stop"] - bj["start"],
+                        frame_shape,
+                        dtype,
+                        compression,
+                    )
+            block_len = b["stop"] - b["start"]
+            n_here = min(block_len, total_to_write - written)
+            srcf = None
+            src_dset = None
+            if not blank:
+                srcf = h5py.File(template_dir / b["source_filename"], "r")
+                src_dset = srcf[b["source_dset"]]
+                # A source block file may hold fewer frames than the block spans.
+                n_here = min(n_here, src_dset.shape[0])
+            logger(
+                f"Filling {path.name}: frames {b['start']}..{b['start'] + n_here - 1} "
+                f"({n_here} of {block_len})"
+            )
+            try:
+                with h5py.File(path, "r+", libver="latest") as f:
+                    f.swmr_mode = True
+                    dset = f[b["source_dset"]]
+                    for i in range(n_here):
+                        dset[i] = zero if blank else src_dset[i]
+                        dset.flush()
+                        written += 1
+                        if interrupted:
+                            break
+                        if interval:
+                            next_t += interval
+                            delay = next_t - time.monotonic()
+                            if delay > 0:
+                                time.sleep(delay)
+                            else:
+                                next_t = time.monotonic()
+                # block file closed here -> visible to the 'file_close' availability method
+            finally:
+                if srcf is not None:
+                    srcf.close()
+            if interrupted:
+                logger("Interrupted; leaving partially-written collection in place.")
+                break
+    finally:
+        signal.signal(signal.SIGINT, previous_handler)
     return written
 
 
@@ -352,8 +449,14 @@ def run(args=None):
         "--compression",
         default="gzip",
         choices=["gzip", "none"],
-        help="Compression for the (all-zero) block datasets (default: gzip, keeps them "
-        "tiny). Use 'none' to write uncompressed.",
+        help="Compression for the output block datasets (default: gzip, a stock filter so "
+        "the output reads without any plugin). Use 'none' to write uncompressed (faster).",
+    )
+    parser.add_argument(
+        "--blank",
+        action="store_true",
+        help="Write all-zero frames instead of copying the real image data. Tiny and fast, "
+        "for exercising image *availability* only (there is nothing to spot-find/index).",
     )
     parser.add_argument(
         "--files-ahead",
@@ -391,6 +494,17 @@ def run(args=None):
         sys.exit(
             f"Output master already exists (use --force to overwrite): {out_master}"
         )
+
+    if not (options.blank or options.setup_only):
+        # Copying the real frames requires decoding the source data, which for DLS/Dectris
+        # data uses the bitshuffle HDF5 filter; importing hdf5plugin registers it.
+        try:
+            import hdf5plugin  # noqa: F401
+        except ImportError:
+            sys.exit(
+                "hdf5plugin is needed to decode the source image data; install it, or use "
+                "--blank to write zero frames (image-availability testing only)."
+            )
 
     # Inspect the template (read-only) for layout and default rate.
     with h5py.File(template, "r") as src:
@@ -434,21 +548,22 @@ def run(args=None):
     if options.setup_only:
         return
 
-    try:
-        written = write_frames(
-            outputs,
-            frame_shape,
-            dtype,
-            frames_target,
-            rate,
-            options.files_ahead,
-            compression,
-            logger=print,
-        )
-    except KeyboardInterrupt:
-        print("\nInterrupted; leaving partially-written collection in place.")
-        return
-    print(f"Done: wrote {written} frames into {out_dir}")
+    written = write_frames(
+        outputs,
+        frame_shape,
+        dtype,
+        frames_target,
+        rate,
+        options.files_ahead,
+        compression,
+        logger=print,
+        template_dir=template.parent,
+        blank=options.blank,
+    )
+    if written >= frames_target:
+        print(f"Done: wrote {written} frames into {out_dir}")
+    else:
+        print(f"Stopped after {written} of {frames_target} frames into {out_dir}")
 
 
 if __name__ == "__main__":
