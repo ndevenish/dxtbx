@@ -198,7 +198,12 @@ def build_structure(
                 # and never beyond the last block that will receive data.
                 if i <= last_block and (files_ahead == 0 or i < files_ahead):
                     _ensure_block_file(
-                        out_path, b["source_dset"], frame_shape, dtype, compression
+                        out_path,
+                        b["source_dset"],
+                        b["stop"] - b["start"],
+                        frame_shape,
+                        dtype,
+                        compression,
                     )
                 group[b["link_name"]] = h5py.ExternalLink(out_name, b["source_dset"])
                 source = h5py.VirtualSource(
@@ -214,15 +219,22 @@ def build_structure(
     return out_master, outputs
 
 
-def _ensure_block_file(path, dset_name, frame_shape, dtype, compression):
-    """Create an empty, growable block data file if it does not already exist."""
+def _ensure_block_file(path, dset_name, block_len, frame_shape, dtype, compression):
+    """Create a block data file at its full extent if it does not already exist.
+
+    This mirrors how real detector writers lay out a block: the dataset is allocated
+    at its full planned length up front (``shape[0] == block_len`` from creation),
+    with one chunk per frame. No pixel data is written yet, so no per-frame chunks are
+    allocated -- the frames become "available" only as :func:`write_frames` writes each
+    chunk. (A growable/resized dataset would instead misrepresent an empty block as
+    length zero, which is not what detectors produce.)
+    """
     if path.exists():
         return
     with h5py.File(path, "w", libver="latest") as sf:
         sf.create_dataset(
             dset_name,
-            shape=(0,) + frame_shape,
-            maxshape=(None,) + frame_shape,
+            shape=(block_len,) + frame_shape,
             chunks=(1,) + frame_shape,
             dtype=dtype,
             compression=compression,
@@ -236,21 +248,21 @@ def write_frames(
     dtype,
     total_to_write,
     rate,
-    extent_only,
     files_ahead,
     compression,
     logger,
 ):
     """Fill the block files via SWMR, one frame at a time, up to total_to_write frames.
 
-    With extent_only, only the dataset extent is grown (no pixel payload written) -- much
-    faster, so high --rate values are achievable; the availability tools read only the
-    frame count, so this is sufficient for testing them.
+    The block datasets are preallocated at full extent (as a detector lays them out), so a
+    frame becomes available when its chunk is written, not when the extent grows. Each
+    frame therefore writes a zero payload into ``dset[i]`` and flushes; the availability
+    tools count the allocated chunks. Use --compression none for the fastest writes.
 
-    With files_ahead>0, block files are created lazily so that only that many empty files
-    exist ahead of the writer at any time (matching a detector's rolling pre-creation).
+    With files_ahead>0, block files are created lazily so that only that many files exist
+    ahead of the writer at any time (matching a detector's rolling pre-creation).
     """
-    zero = None if extent_only else np.zeros(frame_shape, dtype=dtype)
+    zero = np.zeros(frame_shape, dtype=dtype)
     interval = 1.0 / rate if rate > 0 else 0.0
     # Never create block files beyond the last one that will receive data.
     last_block = _last_block_index((b for b, _ in outputs), total_to_write)
@@ -265,7 +277,12 @@ def write_frames(
             for j in range(k, min(k + files_ahead, last_block + 1)):
                 bj, pj = outputs[j]
                 _ensure_block_file(
-                    pj, bj["source_dset"], frame_shape, dtype, compression
+                    pj,
+                    bj["source_dset"],
+                    bj["stop"] - bj["start"],
+                    frame_shape,
+                    dtype,
+                    compression,
                 )
         block_len = b["stop"] - b["start"]
         n_here = min(block_len, total_to_write - written)
@@ -276,10 +293,8 @@ def write_frames(
         with h5py.File(path, "r+", libver="latest") as f:
             f.swmr_mode = True
             dset = f[b["source_dset"]]
-            for _ in range(n_here):
-                dset.resize(dset.shape[0] + 1, axis=0)
-                if not extent_only:
-                    dset[dset.shape[0] - 1] = zero
+            for i in range(n_here):
+                dset[i] = zero
                 dset.flush()
                 written += 1
                 if interval:
@@ -322,15 +337,9 @@ def run(args=None):
         help=(
             "Frames per second to write. Default: derived from the master's count_time "
             "(1/count_time). Override this if the collection rate is too slow (or fast). "
-            "Note: writing full frames caps at ~10-15 fps; use --extent-only for higher."
+            "Note: writing full frames caps at ~10-15 fps; use --compression none for "
+            "faster writes if the disk can keep up."
         ),
-    )
-    parser.add_argument(
-        "--extent-only",
-        action="store_true",
-        help="Grow only the frame count, without writing the (multi-MB) pixel payload. "
-        "Much faster, so high --rate values are achievable; sufficient for testing the "
-        "availability tools, which inspect only frame counts.",
     )
     parser.add_argument(
         "--frames",
@@ -432,7 +441,6 @@ def run(args=None):
             dtype,
             frames_target,
             rate,
-            options.extent_only,
             options.files_ahead,
             compression,
             logger=print,

@@ -646,6 +646,31 @@ def _vds_source_map(
     return sorted(sources)
 
 
+def _written_frame_count(dset) -> int:
+    """Number of frames actually written to a source dataset.
+
+    Detector writers allocate the source dataset at its *full* block extent up front
+    (``shape[0]`` is the planned frame count from creation, before any pixel is
+    written), so the dataset extent cannot tell us how much has arrived. What does
+    grow incrementally is chunk allocation: with one chunk per frame
+    (``chunks == (1, height, width)``) a chunk is only allocated once its frame has
+    been written, so the number of allocated chunks is the number of frames written.
+
+    Falls back to ``shape[0]`` for a genuinely growable/resized dataset or if the
+    chunk count cannot be queried (e.g. contiguous storage).
+    """
+    nframes = int(dset.shape[0])
+    if dset.chunks is not None and dset.chunks[0] == 1:
+        try:
+            n = dset.id.get_num_chunks()
+        except (RuntimeError, OSError, ValueError, TypeError):
+            return nframes
+        # One chunk per frame along the first axis, so allocated chunks == frames
+        # written; clamp defensively to the declared extent.
+        return min(int(n), nframes)
+    return nframes
+
+
 def _frames_written(src_path: pathlib.Path, dset_name: str, method: str) -> int:
     """Number of frames currently readable in a single VDS source data file.
 
@@ -654,16 +679,19 @@ def _frames_written(src_path: pathlib.Path, dset_name: str, method: str) -> int:
     """
     try:
         if method == "file_close":
-            # A plain (non-SWMR) open succeeds only once the writer has released
-            # the file, i.e. the whole block has finished being written.
+            # A plain (non-SWMR) open succeeds only once the writer has released the
+            # file, i.e. the whole block has finished; a block still being written is
+            # locked and raises (caught below -> 0). Detector files are preallocated at
+            # full extent, so count written chunks rather than the (static) extent -- a
+            # closed-but-empty pre-created file must not read as fully available.
             with h5py.File(src_path, "r") as fh:
-                return int(fh[dset_name].shape[0])
+                return _written_frame_count(fh[dset_name])
         else:  # "swmr"
             with h5py.File(src_path, "r", swmr=True) as fh:
                 dset = fh[dset_name]
                 if hasattr(dset, "refresh"):
                     dset.refresh()
-                return int(dset.shape[0])
+                return _written_frame_count(dset)
     except (OSError, KeyError):
         return 0
 
@@ -681,8 +709,9 @@ def get_frame_counts(master_path, method: str = "swmr") -> tuple[int, int]:
     * ``total``: the full planned number of frames the master declares.
 
     ``method`` selects how a source data file's readiness is judged:
-      * ``"swmr"`` (default): read the source dataset's current extent via an SWMR read
-        (per-image granularity; requires the writer to use SWMR and growable datasets).
+      * ``"swmr"`` (default): count the frames written to each source via an SWMR read
+        (per-image granularity). Detector datasets are allocated at their full extent up
+        front, so this counts allocated per-frame chunks rather than the (static) extent.
       * ``"file_close"``: treat a source as ready only once it can be opened without
         SWMR, i.e. the writer has closed it (per-block granularity).
 
