@@ -20,40 +20,19 @@ import os
 import sys
 import time
 
+from tqdm import tqdm
+
 import dxtbx.util
 from dxtbx.nexus import get_frame_counts
 
-
-def _fmt_duration(seconds: float) -> str:
-    seconds = int(round(seconds))
-    if seconds < 60:
-        return f"{seconds}s"
-    if seconds < 3600:
-        return f"{seconds // 60}m{seconds % 60:02d}s"
-    return f"{seconds // 3600}h{(seconds % 3600) // 60:02d}m"
+UNIT = " images"
 
 
-def _bar(fraction: float, width: int = 30) -> str:
-    fraction = max(0.0, min(1.0, fraction))
-    filled = int(round(fraction * width))
-    return "#" * filled + "-" * (width - filled)
-
-
-def _format_line(name: str, avail: int, total: int, rate: float | None) -> str:
+def _snapshot(label: str, avail: int, total: int) -> str:
+    """Render a single, static tqdm-styled line (no rate or ETA available)."""
     if total <= 0:
-        return f"{name}  [{_bar(0)}] unreadable / no frames declared"
-    fraction = avail / total
-    body = f"[{_bar(fraction)}] {avail}/{total} ({100 * fraction:5.1f}%)"
-    if avail >= total:
-        extra = "complete"
-    elif rate and rate > 0:
-        eta = (total - avail) / rate
-        extra = f"+{rate:6.1f}/s  ETA {_fmt_duration(eta)}"
-    elif rate == 0:
-        extra = "stalled"
-    else:
-        extra = "waiting…"
-    return f"{name}  {body}  {extra}"
+        return f"{label}  unreadable / no frames declared"
+    return tqdm.format_meter(n=avail, total=total, elapsed=0, prefix=label, unit=UNIT)
 
 
 def run(args=None):
@@ -106,52 +85,73 @@ def run(args=None):
     width = max(len(label) for label in labels)
     labels = [label.ljust(width) for label in labels]
 
-    # Redraw in place only for an interactive terminal doing live updates.
+    # tqdm can only redraw in place on an interactive terminal; anywhere else fall
+    # back to plain snapshot lines, one block per poll.
     live = not options.once and sys.stdout.isatty()
 
-    previous: dict[str, tuple[float, int]] = {}
-
-    def poll_once() -> bool:
-        """Render one frame of output; return True when every file is complete."""
-        now = time.monotonic()
+    def snapshot() -> bool:
+        """Print one block of static lines; return True when every file is complete."""
         lines = []
         all_complete = True
         for master, label in zip(masters, labels):
             avail, total = get_frame_counts(master, options.method)
-            rate: float | None = None
-            if master in previous:
-                prev_t, prev_n = previous[master]
-                dt = now - prev_t
-                if dt > 0:
-                    rate = (avail - prev_n) / dt
-            previous[master] = (now, avail)
-            lines.append(_format_line(label, avail, total, rate))
+            lines.append(_snapshot(label, avail, total))
             if total <= 0 or avail < total:
                 all_complete = False
-        if live:
-            sys.stdout.write("\n".join(lines) + "\n")
-            sys.stdout.flush()
-        else:
-            print("\n".join(lines))
+        print("\n".join(lines))
         return all_complete
 
-    if options.once:
-        poll_once()
+    if not live:
+        try:
+            while True:
+                if snapshot() and not options.watch_complete:
+                    break
+                if options.once:
+                    break
+                time.sleep(options.interval)
+        except KeyboardInterrupt:
+            pass
         return
 
+    # One bar per master. The declared total is unknown until the first successful
+    # read, so start unbounded and fill it in as soon as we know it.
+    bars = [
+        tqdm(
+            total=None,
+            desc=label,
+            unit=UNIT,
+            position=index,
+            leave=True,
+            dynamic_ncols=True,
+            file=sys.stdout,
+        )
+        for index, label in enumerate(labels)
+    ]
     try:
         while True:
-            complete = poll_once()
-            if complete and not options.watch_complete:
+            all_complete = True
+            for master, bar in zip(masters, bars):
+                avail, total = get_frame_counts(master, options.method)
+                if total > 0 and bar.total != total:
+                    bar.total = total
+                if avail >= bar.n:
+                    bar.update(avail - bar.n)
+                else:
+                    # Shouldn't happen, but never let a bar run backwards silently.
+                    bar.reset(total=bar.total)
+                    bar.update(avail)
+                bar.refresh()
+                if total <= 0 or avail < total:
+                    all_complete = False
+            if all_complete and not options.watch_complete:
                 break
             time.sleep(options.interval)
-            if live:
-                # Move the cursor back up over the block we just printed.
-                sys.stdout.write(f"\033[{len(masters)}F")
-                sys.stdout.flush()
     except KeyboardInterrupt:
         # Leave the last rendered frame visible and exit quietly.
-        print()
+        pass
+    finally:
+        for bar in bars:
+            bar.close()
 
 
 if __name__ == "__main__":
